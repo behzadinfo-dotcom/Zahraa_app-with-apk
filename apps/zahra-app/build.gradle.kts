@@ -1,0 +1,98 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.compose)
+}
+
+// مقدارهای Appwrite از ریشه‌ی پروژه می‌آیند (local.properties / متغیر محیطی / ‑P).
+// اگر projectId خالی باشد، اپ در «حالت محلی» بالا می‌آید و چیزی به سرور نمی‌فرستد.
+val appwriteEndpoint = findProperty("resolvedAppwriteEndpoint") as? String
+    ?: "https://fra.cloud.appwrite.io/v1"
+val appwriteProjectId = findProperty("resolvedAppwriteProjectId") as? String ?: ""
+val appwriteDatabaseId = findProperty("resolvedAppwriteDatabaseId") as? String ?: "main_db"
+
+android {
+    namespace = "ir.behzad.roozhayeman"
+    compileSdk = 37
+
+    defaultConfig {
+        applicationId = "ir.behzad.roozhayeman"
+        minSdk = 26
+        targetSdk = 36
+        versionCode = 1
+        versionName = "1.0"
+        buildConfigField("String", "APPWRITE_ENDPOINT", "\"$appwriteEndpoint\"")
+        buildConfigField("String", "APPWRITE_PROJECT_ID", "\"$appwriteProjectId\"")
+        buildConfigField("String", "APPWRITE_DATABASE_ID", "\"$appwriteDatabaseId\"")
+    }
+
+    buildTypes {
+        debug {
+            // بدون applicationIdSuffix: هر اپ فقط یک «Platform» در کنسول Appwrite لازم دارد.
+            versionNameSuffix = "-debug"
+        }
+        release {
+            // تا زمانی که R8 با کتابخانه‌های WebRTC/Appwrite تست نشده، minify خاموش است.
+            isMinifyEnabled = false
+            isShrinkResources = false
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose = true
+        buildConfig = true
+    }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+        }
+    }
+}
+
+// AGP 9: پلاگین Kotlin Android حذف شده (Kotlin داخلی است)؛
+// گزینه‌های کامپایلر از `android.kotlinOptions` به این بلوک منتقل شده‌اند.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
+
+dependencies {
+    implementation(platform(libs.androidx.compose.bom))
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.foundation)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.activity.compose)
+    // بیومتریک: androidx.biometric برای API<28 دیالوگ سازگاریِ AppCompat دارد، پس
+    // تم اکتیویتی باید از Theme.AppCompat باشد و appcompat هم روی classpath باشد.
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(project(":core-common"))
+    implementation(project(":core-designsystem"))
+    implementation(project(":core-appwrite"))
+    implementation(project(":core-security"))
+    implementation(project(":core-notifications"))
+    implementation(project(":feature-pairing"))
+    implementation(project(":feature-hearttoheart"))
+    implementation(project(":feature-calls"))
+    implementation(project(":feature-playback"))
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    testImplementation(libs.junit)
+    implementation(project(":core-sync"))
+}

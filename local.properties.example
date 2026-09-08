@@ -1,0 +1,11 @@
+# این فایل را به local.properties کپی کنید (local.properties در git نیست).
+# مسیر SDK اندروید (Android Studio خودش می‌سازد):
+# sdk.dir=/Users/you/Library/Android/sdk
+
+# --- Appwrite (اجباری برای حالت سرور؛ بدون آن اپ در حالت محلی کار می‌کند) ---
+# کنسول Appwrite › Project › Overview › Project ID
+appwrite.projectId=
+# منطقه‌ی پروژه: fra / nyc / sgp / sydney
+appwrite.endpoint=https://fra.cloud.appwrite.io/v1
+# نام دیتابیسی که با `appwrite push tablesDB` ساخته می‌شود
+appwrite.databaseId=main_db

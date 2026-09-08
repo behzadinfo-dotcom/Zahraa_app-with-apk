@@ -1,0 +1,16 @@
+# Local machine and secret configuration
+local.properties
+
+# Android/Gradle generated output
+.gradle/
+**/build/
+.kotlin/
+
+# IDE files
+.idea/
+*.iml
+.DS_Store
+
+# Keep the distributable APK in version control
+!artifacts/
+!artifacts/zahra-app-debug.apk

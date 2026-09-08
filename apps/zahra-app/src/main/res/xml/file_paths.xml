@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  مسیرهایی که FileProvider اجازه‌ی اشتراکشان را دارد:
+  فقط حافظه‌ی موقت اپ برای رسانه‌های «حرف دل» (ویس/عکس/فایل).
+-->
+<paths>
+    <cache-path name="heart" path="heart/" />
+    <cache-path name="voice" path="voice/" />
+    <files-path name="private_media" path="media/" />
+</paths>

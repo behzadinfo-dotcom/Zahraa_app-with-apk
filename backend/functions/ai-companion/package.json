@@ -1,0 +1,8 @@
+{
+  "name": "ai-companion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "لایه‌ی AI «همراه زهرا» — proxy سمت سرور؛ کلید مدل هرگز در اپ نیست",
+  "main": "src/main.js",
+  "dependencies": {}
+}
