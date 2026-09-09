@@ -214,4 +214,4 @@ private fun MoveImageCard(move: WellnessMove) {
 
 /** helper کوچک تا فراموش‌نکردن اسکرول عمودی در صفحه‌ی جزئیات. */
 @Composable
-private fun Modifier.verticalScrollState(): Modifier = this.then(androidx.compose.foundation.verticalScroll(rememberScrollState()))
+private fun Modifier.verticalScrollState(): Modifier = this.verticalScroll(rememberScrollState())
