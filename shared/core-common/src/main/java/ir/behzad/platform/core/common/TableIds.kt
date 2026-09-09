@@ -46,15 +46,19 @@ object TableIds {
     const val LEARNING_NODES = "learning_nodes"
     const val ART_PROMPTS = "art_prompts"
 
+    // --- پرامپت ۰۱: حافظه‌ی پیشرفت پلیر ویدیو/صوت ---
+    const val LESSON_MEDIA_PROGRESS = "lesson_media_progress"
+
     /**
      * همه‌ی جداولی که واقعاً در Appwrite ساخته می‌شوند
-     * (مطابق `backend/appwrite.json` — ۱۹ جدول).
+     * (مطابق `backend/appwrite.json` — ۲۰ جدول).
      */
     val serverTables: Set<String> = setOf(
         PROFILES, USER_SETTINGS, FATHER_LINKS, PAIRING_CODES,
         FATHER_MESSAGES, ALBUM_ITEMS, CALL_SESSIONS, CALL_SIGNALS,
         WEEKLY_SUMMARIES, ROUTINE_BLOCKS, WATER_LOGS, EXERCISE_LOGS, BADGES,
         LESSONS, QUIZZES, RECIPES, EXERCISES, LEARNING_NODES, ART_PROMPTS,
+        LESSON_MEDIA_PROGRESS,
     )
 
     /** جدول‌های «فقط روی دستگاه» — در سرور هیچ سطری ندارند و ساخته هم نمی‌شوند. */

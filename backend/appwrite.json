@@ -741,7 +741,7 @@
       "permissions": [
         "read(\"any\")"
       ],
-      "_note": "محتوای عمومی آموزشی؛ فقط با کلید سرور نوشته می‌شود.",
+      "_note": "محتوای عمومی آموزشی؛ فقط با کلید سرور نوشته می‌شود. پرامپت ۰۱: ستون‌های media/video و audio اضافه شد. پرامپت ۰۵: ستون‌های bookCode, lessonNumber, hasVideo, hasAudio, chapterMarkers اضافه شد.",
       "columns": [
         {
           "$id": "title",
@@ -768,9 +768,220 @@
           "size": 65535,
           "required": false,
           "default": ""
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "bookTitleFa",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "subjectOrder",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lessonNumber",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lessonTitleFa",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "hasVideo",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "hasAudio",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "videoUrl",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "audioUrl",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "chapterMarkers",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "flashcardSetId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "questionBankId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "examRangeGroup",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "prerequisiteSummaryId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "$id": "lessonsBookCodeIdx",
+          "type": "key",
+          "attributes": [
+            "bookCode",
+            "lessonNumber"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "lesson_media_progress",
+      "databaseId": "main_db",
+      "name": "پیشرفت رسانه‌ی درس",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "_note": "پرامپت ۰۱: حافظه‌ی پیشرفت پلیر ویدیو/صوت. یک سطر به ازای هر (userId+bookCode+lessonId+mediaType). viewHistory و seekJumps به‌صورت آرایه‌ی JSON-رشته‌ای ذخیره می‌شوند (append در سمت سرور).",
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "lessonId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "mediaType",
+          "type": "string",
+          "size": 8,
+          "required": true,
+          "default": "video"
+        },
+        {
+          "$id": "lastPositionSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "durationSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "playbackSpeed",
+          "type": "double",
+          "required": false,
+          "default": 1
+        },
+        {
+          "$id": "isCompleted",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "viewCount",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lastViewedAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "viewHistory",
+          "type": "string",
+          "size": 16384,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "seekJumps",
+          "type": "string",
+          "size": 16384,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "updatedAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "progressUserLessonIdx",
+          "type": "unique",
+          "attributes": [
+            "userId",
+            "bookCode",
+            "lessonId",
+            "mediaType"
+          ]
+        }
+      ]
     },
     {
       "$id": "quizzes",

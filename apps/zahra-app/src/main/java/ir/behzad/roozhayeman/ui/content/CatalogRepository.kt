@@ -258,6 +258,11 @@ private fun TableRow.toLesson(): Lesson = Lesson(
     subject = string("subject"),
     grade = long("grade").toInt(),
     body = string("body"),
+    bookCode = string("bookCode"),
+    lessonNumber = long("lessonNumber").toInt(),
+    videoUrl = string("videoUrl"),
+    audioUrl = string("audioUrl"),
+    chapterMarkers = stringList(string("chapterMarkers")).mapNotNull { it.toDoubleOrNull() },
 )
 
 private fun TableRow.toQuiz(): QuizQuestion? {
@@ -321,9 +326,26 @@ private fun recipeFromJson(o: JSONObject): Recipe? = runCatching {
 
 private fun Lesson.toJson(): JSONObject = JSONObject()
     .put("id", id).put("title", title).put("subject", subject).put("grade", grade).put("body", body)
+    .put("bookCode", bookCode).put("lessonNumber", lessonNumber)
+    .put("videoUrl", videoUrl).put("audioUrl", audioUrl)
+    .put("chapterMarkers", JSONArray(chapterMarkers))
 
 private fun lessonFromJson(o: JSONObject): Lesson? = runCatching {
-    Lesson(o.getString("id"), o.getString("title"), o.optString("subject"), o.optInt("grade"), o.optString("body"))
+    val markers = o.optJSONArray("chapterMarkers")?.let { a ->
+        buildList { for (i in 0 until a.length()) add(a.optDouble(i, 0.0)) }
+    } ?: emptyList()
+    Lesson(
+        id = o.getString("id"),
+        title = o.getString("title"),
+        subject = o.optString("subject"),
+        grade = o.optInt("grade"),
+        body = o.optString("body"),
+        bookCode = o.optString("bookCode"),
+        lessonNumber = o.optInt("lessonNumber"),
+        videoUrl = o.optString("videoUrl"),
+        audioUrl = o.optString("audioUrl"),
+        chapterMarkers = markers,
+    )
 }.getOrNull()
 
 private fun QuizQuestion.toJson(): JSONObject = JSONObject()

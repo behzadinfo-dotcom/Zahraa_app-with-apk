@@ -19,6 +19,10 @@ android {
     buildFeatures {
         compose = false
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 // AGP 9: پلاگین Kotlin Android حذف شده (Kotlin داخلی است)؛
@@ -34,6 +38,14 @@ dependencies {
     api(libs.androidx.media3.session)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.common)
+    implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
+
+    // پرامپت ۰۱: حافظه‌ی پیشرفت + سینک
+    implementation(project(":core-common"))
+    implementation(project(":core-appwrite"))
+    implementation(project(":core-sync"))
+
+    testImplementation(libs.junit)
 }
