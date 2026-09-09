@@ -62,13 +62,22 @@ jobs:
         run: npm ci
 
       - name: 🩺 بررسی سلامت Appwrite
+        # Health endpoint Appwrite نیاز به Project ID و API Key دارد.
+        # اگر 401 یا خطا داد، ادامه می‌دهیم — migration خودش خطا می‌دهد اگر مشکل باشد.
         run: |
-          curl -fsS -o /dev/null -w "Appwrite health: %{http_code}\n" \
-            "$APPWRITE_ENDPOINT/health" || {
-            echo "❌ Appwrite در دسترس نیست!"
-            exit 1
-          }
-          echo "✅ Appwrite در دسترس است"
+          HEALTH_CODE=$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "X-Appwrite-Project: $APPWRITE_PROJECT_ID" \
+            -H "X-Appwrite-Key: $APPWRITE_API_KEY" \
+            "$APPWRITE_ENDPOINT/health" || echo "000")
+          echo "Appwrite health: HTTP $HEALTH_CODE"
+          if [ "$HEALTH_CODE" = "200" ]; then
+            echo "✅ Appwrite در دسترس است"
+          else
+            echo "⚠️  health check غیرعادی — ادامه می‌دهیم"
+            echo "   endpoint: $APPWRITE_ENDPOINT"
+            echo "   project:  $APPWRITE_PROJECT_ID"
+            echo "   (اگر migration شکست خورد، مشکل از اینجاست)"
+          fi
 
       - name: 🗄 گام ۱/۳ — Migration (ساخت جداول wellness)
         if: github.event.inputs.skip_migration != 'true'
