@@ -48,6 +48,23 @@ data class WellnessMove(
             else -> Intensity.HIGH
         }
 
+    /**
+     * لیست فایل‌های صوتی cue. اگر `audioCueId` با `|` جدا شده باشد
+     * (مثل `cue-yoga-balasana-start.mp3|cue-yoga-balasana-mid.mp3|cue-yoga-balasana-end.mp3`)،
+     * چند فایل برگردانده می‌شود تا در زمان‌های مختلف (شروع/میانه/پایان) پخش شوند.
+     */
+    val audioCueIds: List<String>
+        get() = audioCueId.split("|").map { it.trim() }.filter { it.isNotEmpty() }
+
+    /** فایل صوتی اول (شروع) — یا تنها فایل اگر فقط یکی باشد. */
+    val startCueId: String? get() = audioCueIds.firstOrNull()
+
+    /** فایل صوتی میانه (در صورت وجود). */
+    val midCueId: String? get() = audioCueIds.getOrNull(1)
+
+    /** فایل صوتی پایان (در صورت وجود). */
+    val endCueId: String? get() = audioCueIds.getOrNull(2)
+
     enum class Intensity { LOW, MEDIUM, HIGH }
 }
 

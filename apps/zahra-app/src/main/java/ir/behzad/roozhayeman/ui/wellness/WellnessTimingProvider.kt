@@ -25,10 +25,12 @@ class WellnessTimingProvider : WellnessTimer.TimingProvider {
     private fun yogaTiming(move: WellnessMove): WellnessTiming {
         val total = move.durationSec.coerceAtLeast(20)
         val cues = mutableListOf<AudioCue>()
-        // معرفی اول
+        // معرفی اول (فایل شروع پخش می‌شود)
         cues += AudioCue(0, "${move.titleFa} — ${move.instructionsFa.take(80)}…", AudioCue.Kind.INTRO)
-        // ۱۰ ثانیه آخر: آرام‌سازی
+        // ۱۰ ثانیه آخر: آرام‌سازی (فایل میانه پخش می‌شود)
         if (total >= 30) cues += AudioCue(total - 10, "به‌آرامی نفس بکش و رها کن.", AudioCue.Kind.GUIDE)
+        // پایان جلسه (فایل پایان پخش می‌شود)
+        cues += AudioCue(total, "آفرین. تمرین تمام شد.", AudioCue.Kind.FINISH)
         return WellnessTiming(
             move = move,
             steps = listOf(WellnessStep("نگه‌دار", total)),
@@ -112,6 +114,8 @@ class WellnessTimingProvider : WellnessTimer.TimingProvider {
         if (total >= 600) cues += AudioCue(total / 2, "نصف راه رد شد. ادامه بده.", AudioCue.Kind.GUIDE)
         // ۲ دقیقه آخر
         if (total >= 300) cues += AudioCue(total - 120, "دو دقیقه‌ی آخر. جمع‌بندی کن.", AudioCue.Kind.GUIDE)
+        // پایان
+        cues += AudioCue(total, "تمام شد. آفرین.", AudioCue.Kind.FINISH)
         return WellnessTiming(
             move = move,
             steps = listOf(WellnessStep("اجرا", total)),

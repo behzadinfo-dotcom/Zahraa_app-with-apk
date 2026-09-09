@@ -227,16 +227,40 @@ class WellnessTimer(
 
     private fun playCue(cue: AudioCue) {
         // فایل صوتی cue از Storage دانلود می‌شود.
-        // اگر هنوز دانلود نشده، در پس‌زمینه دانلود شود.
-        // در نسخه‌ی فعلی، اگر فایل در کش نباشد، skip می‌کنیم.
+        // استراتژی:
+        //  - cue.kind == INTRO → فایل شروع (startCueId یا اولین فایل)
+        //  - cue.kind == FINISH → فایل پایان (endCueId یا آخرین فایل)
+        //  - سایر cue ها (GUIDE) → فایل میانه (midCueId یا فایل وسط)
+        //  - اگر فقط یک فایل باشد، همان برای همه پخش می‌شود.
+        val filename = pickCueFilename(cue) ?: return
         scope.launch {
             val local = withContext(Dispatchers.IO) {
-                AudioCueCache.getLocalFile(context, cue.textFa)
+                AudioCueCache.getLocalFile(context, filename)
             }
             if (local != null && local.exists()) {
                 playLocalFile(local.absolutePath)
             }
-            // TODO: download from Storage if missing
+            // اگر فایل در کش نبود، skip می‌کنیم (timer فقط بصری ادامه می‌دهد).
+        }
+    }
+
+    /**
+     * انتخاب فایل صوتی مناسب بر اساس نوع cue و مرحله‌ی جلسه.
+     *
+     *  - شروع (INTRO): فایل اول audioCueIds
+     *  - پایان (FINISH): فایل آخر audioCueIds
+     *  - میانه (GUIDE/...): فایل میانی audioCueIds
+     *  - اگر فقط ۱ فایل باشد: همان
+     */
+    private fun pickCueFilename(cue: AudioCue): String? {
+        val move = currentMove ?: return null
+        val ids = move.audioCueIds
+        if (ids.isEmpty()) return null
+        return when {
+            ids.size == 1 -> ids[0]
+            cue.kind == AudioCue.Kind.INTRO -> ids.first()
+            cue.kind == AudioCue.Kind.FINISH -> ids.last()
+            else -> ids.getOrNull(1) ?: ids.first()
         }
     }
 

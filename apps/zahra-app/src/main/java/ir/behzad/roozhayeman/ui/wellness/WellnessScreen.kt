@@ -130,7 +130,10 @@ fun WellnessScreen(
                     val ctx = LocalContext.current
                     MoveCard(move = move, onStart = {
                         scope.launch {
-                            AudioCueCache.prefetch(ctx, move.audioCueId)
+                            // prefetch همه‌ی فایل‌های صوتی (start/mid/end اگر چندتایی باشد)
+                            move.audioCueIds.forEach { id ->
+                                AudioCueCache.prefetch(ctx, id)
+                            }
                             activeMove = move
                         }
                     })
