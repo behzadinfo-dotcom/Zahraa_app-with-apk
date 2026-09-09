@@ -24,6 +24,9 @@ import ir.behzad.platform.feature.hearttoheart.AlbumRepository
 import ir.behzad.platform.feature.hearttoheart.HeartRepository
 import ir.behzad.platform.feature.pairing.AppwritePairingRepository
 import ir.behzad.platform.feature.playback.LessonMediaProgressRepository
+import ir.behzad.roozhayeman.ui.wellness.WellnessLogRepository
+import ir.behzad.roozhayeman.ui.wellness.WellnessMoveRepository
+import ir.behzad.roozhayeman.ui.wellness.WellnessTimingProvider
 import ir.behzad.roozhayeman.BuildConfig
 import ir.behzad.roozhayeman.ui.chatbot.AiCompanion
 import ir.behzad.roozhayeman.ui.content.CatalogRepository
@@ -167,6 +170,23 @@ class AppContainer(context: Context) {
         provider = appwrite,
         sync = sync,
     )
+
+    /**
+     * پرامپت ۰۲: کاتالوگ حرکات سلامتی + گزارش جلسه‌ها.
+     * الگوی سه‌لایه‌ای: سرور → کش محلی → کاتالوگ داخلی.
+     */
+    val wellnessMoves = WellnessMoveRepository(
+        store = store,
+        tables = tables,
+        provider = appwrite,
+    )
+    val wellnessLogs = WellnessLogRepository(
+        store = store,
+        tables = tables,
+        provider = appwrite,
+        sync = sync,
+    )
+    val wellnessTiming = WellnessTimingProvider()
 
     /** بیومتریک فقط «راه جایگزینِ بازکردن همان قفل PIN» است؛ بدون PIN فعال نمی‌شود. */
     val biometric = BiometricUnlock(store, lock)

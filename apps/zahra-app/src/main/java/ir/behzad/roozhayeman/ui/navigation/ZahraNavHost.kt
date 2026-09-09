@@ -56,6 +56,8 @@ import ir.behzad.roozhayeman.ui.settings.RemindersScreen
 import ir.behzad.roozhayeman.ui.settings.SettingsScreen
 import ir.behzad.roozhayeman.ui.settings.SyncScreen
 import ir.behzad.roozhayeman.ui.study.AudiobookScreen
+import ir.behzad.roozhayeman.ui.wellness.SketchGalleryScreen
+import ir.behzad.roozhayeman.ui.wellness.WellnessScreen
 import ir.behzad.roozhayeman.ui.study.LibraryScreen
 import ir.behzad.roozhayeman.ui.study.PdfUploadScreen
 import ir.behzad.roozhayeman.ui.study.ProgressChartsScreen
@@ -194,6 +196,15 @@ fun ZahraNavHost() {
             composable(Screen.Lock.route) { AppLockScreen { nav.popBackStack() } }
             composable(Screen.Reminders.route) { RemindersScreen { nav.popBackStack() } }
             composable(Screen.Sync.route) { SyncScreen { nav.popBackStack() } }
+            composable(Screen.Wellness.route) {
+                WellnessScreen(
+                    onBack = { nav.popBackStack() },
+                    onSketchGallery = { nav.navigate(Screen.SketchGallery.route) },
+                )
+            }
+            composable(Screen.SketchGallery.route) {
+                SketchGalleryScreen(onBack = { nav.popBackStack() })
+            }
         }
     }
 }

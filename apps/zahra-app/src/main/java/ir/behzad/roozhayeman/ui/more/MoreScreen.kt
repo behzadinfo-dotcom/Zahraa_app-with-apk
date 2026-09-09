@@ -26,6 +26,7 @@ fun MoreScreen(nav: NavController) {
         SectionCard("نقاشی سیاه‌قلم", "ایده‌ی امروز و گالری.") { nav.navigate(Screen.Art.route) }
         SectionCard("آشپزی", "دستور پخت درخواستی.") { nav.navigate(Screen.Recipes.route) }
         SectionCard("ورزش و یوگا", "کاتالوگ حرکت‌ها.") { nav.navigate(Screen.Exercise.route) }
+        SectionCard("سلامتی (یوگا، ورزش، تنفس، یادگیری)", "۴۳ حرکت با تایمر و اعلان صوتی فارسی.") { nav.navigate(Screen.Wellness.route) }
         SectionCard("آب", "یادآور نوشیدن.") { nav.navigate(Screen.Water.route) }
         SectionCard("امتیاز و بج", "فقط جنبه‌ی مثبت.") { nav.navigate(Screen.Badges.route) }
         SectionCard("پیوند با بابا", "کد ۶ رقمی.") { nav.navigate(Screen.Pairing.route) }

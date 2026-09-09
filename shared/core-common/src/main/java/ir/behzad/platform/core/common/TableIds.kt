@@ -49,16 +49,21 @@ object TableIds {
     // --- پرامپت ۰۱: حافظه‌ی پیشرفت پلیر ویدیو/صوت ---
     const val LESSON_MEDIA_PROGRESS = "lesson_media_progress"
 
+    // --- پرامپت ۰۲: ماژول ورزش/یوگا/تنفس/یادگیری ---
+    const val WELLNESS_MOVES = "wellness_moves"
+    const val SKETCH_REFERENCES = "sketch_references"
+    const val WELLNESS_LOGS = "wellness_logs"
+
     /**
      * همه‌ی جداولی که واقعاً در Appwrite ساخته می‌شوند
-     * (مطابق `backend/appwrite.json` — ۲۰ جدول).
+     * (مطابق `backend/appwrite.json` — ۲۳ جدول).
      */
     val serverTables: Set<String> = setOf(
         PROFILES, USER_SETTINGS, FATHER_LINKS, PAIRING_CODES,
         FATHER_MESSAGES, ALBUM_ITEMS, CALL_SESSIONS, CALL_SIGNALS,
         WEEKLY_SUMMARIES, ROUTINE_BLOCKS, WATER_LOGS, EXERCISE_LOGS, BADGES,
         LESSONS, QUIZZES, RECIPES, EXERCISES, LEARNING_NODES, ART_PROMPTS,
-        LESSON_MEDIA_PROGRESS,
+        LESSON_MEDIA_PROGRESS, WELLNESS_MOVES, SKETCH_REFERENCES, WELLNESS_LOGS,
     )
 
     /** جدول‌های «فقط روی دستگاه» — در سرور هیچ سطری ندارند و ساخته هم نمی‌شوند. */
@@ -73,6 +78,8 @@ object BucketIds {
     const val AVATARS = "avatars"
     const val FATHER_ALBUM = "father-album"
     const val ZAHRA_PRIVATE = "zahra-private"
+    /** پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات و مرجع‌های سیاه‌قلم. */
+    const val WELLNESS_MEDIA = "wellness-media"
 }
 
 /** شناسه‌ی توابع سرور (Function ID در کنسول Appwrite). */
@@ -100,6 +107,12 @@ object FunctionIds {
 
     /** تأیید/رد خاطره‌ی پدر در آلبوم، با بررسی مالکیت سمت سرور. */
     const val ALBUM_CONSENT = "album-consent"
+
+    /**
+     * پرامپت ۰۲: تولید تصویر مرجع سیاه‌قلم (pencil sketch) برای تمرین نقاشی.
+     * ورودی: subject + level (۴-۱۰). خروجی: URL تصویر سیاه‌وسفید.
+     */
+    const val GENERATE_SKETCH_REFERENCE = "generate-sketch-reference"
 }
 
 /**

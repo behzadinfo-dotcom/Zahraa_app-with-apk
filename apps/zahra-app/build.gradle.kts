@@ -78,6 +78,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.coil.compose)
     // بیومتریک: androidx.biometric برای API<28 دیالوگ سازگاریِ AppCompat دارد، پس
     // تم اکتیویتی باید از Theme.AppCompat باشد و appcompat هم روی classpath باشد.
     implementation(libs.androidx.biometric)
