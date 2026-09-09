@@ -17,6 +17,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
 import ir.behzad.platform.core.common.JalaliDate
 import ir.behzad.platform.core.designsystem.AppTopBar
@@ -86,6 +95,7 @@ fun LearningHomeScreen(nav: NavController) {
     }
 }
 
+@OptIn(UnstableApi::class)
 @Composable
 fun LessonScreen(lessonId: String, onBack: () -> Unit, onQuiz: (String) -> Unit) {
     val container = LocalAppContainer.current
@@ -97,16 +107,16 @@ fun LessonScreen(lessonId: String, onBack: () -> Unit, onQuiz: (String) -> Unit)
         if (lesson != null) markLessonRead(container.store, lessonId)
     }
 
-    val current = lesson
+    val current = lesson ?: return
+
+    // پرامپت ۰۱: اگر درس رسانه (ویدیو/صوت) دارد → صفحه‌ی پلیر اختصاصی نشان داده شود.
+    if (current.videoUrl.isNotBlank() || current.audioUrl.isNotBlank()) {
+        LessonPlayerScreen(lesson = current, onBack = onBack)
+        return
+    }
+
     Column(Modifier.fillMaxSize()) {
-        AppTopBar(current?.title ?: "درس", onBack)
-        if (current == null) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("این درس پیدا نشد.")
-                PrimaryButton("بازگشت", onBack)
-            }
-            return@Column
-        }
+        AppTopBar(current.title, onBack)
         Column(
             Modifier
                 .fillMaxSize()

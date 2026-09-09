@@ -741,7 +741,7 @@
       "permissions": [
         "read(\"any\")"
       ],
-      "_note": "محتوای عمومی آموزشی؛ فقط با کلید سرور نوشته می‌شود.",
+      "_note": "محتوای عمومی آموزشی؛ فقط با کلید سرور نوشته می‌شود. پرامپت ۰۱: ستون‌های media/video و audio اضافه شد. پرامپت ۰۵: ستون‌های bookCode, lessonNumber, hasVideo, hasAudio, chapterMarkers اضافه شد.",
       "columns": [
         {
           "$id": "title",
@@ -768,9 +768,220 @@
           "size": 65535,
           "required": false,
           "default": ""
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "bookTitleFa",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "subjectOrder",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lessonNumber",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lessonTitleFa",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "hasVideo",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "hasAudio",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "videoUrl",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "audioUrl",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "chapterMarkers",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "flashcardSetId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "questionBankId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "examRangeGroup",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "prerequisiteSummaryId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
         }
       ],
-      "indexes": []
+      "indexes": [
+        {
+          "$id": "lessonsBookCodeIdx",
+          "type": "key",
+          "attributes": [
+            "bookCode",
+            "lessonNumber"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "lesson_media_progress",
+      "databaseId": "main_db",
+      "name": "پیشرفت رسانه‌ی درس",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "_note": "پرامپت ۰۱: حافظه‌ی پیشرفت پلیر ویدیو/صوت. یک سطر به ازای هر (userId+bookCode+lessonId+mediaType). viewHistory و seekJumps به‌صورت آرایه‌ی JSON-رشته‌ای ذخیره می‌شوند (append در سمت سرور).",
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "lessonId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "mediaType",
+          "type": "string",
+          "size": 8,
+          "required": true,
+          "default": "video"
+        },
+        {
+          "$id": "lastPositionSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "durationSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "playbackSpeed",
+          "type": "double",
+          "required": false,
+          "default": 1
+        },
+        {
+          "$id": "isCompleted",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "viewCount",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "lastViewedAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "viewHistory",
+          "type": "string",
+          "size": 16384,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "seekJumps",
+          "type": "string",
+          "size": 16384,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "updatedAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "progressUserLessonIdx",
+          "type": "unique",
+          "attributes": [
+            "userId",
+            "bookCode",
+            "lessonId",
+            "mediaType"
+          ]
+        }
+      ]
     },
     {
       "$id": "quizzes",
@@ -987,6 +1198,232 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "$id": "wellness_moves",
+      "databaseId": "main_db",
+      "name": "حرکات سلامتی",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "_note": "پرامپت ۰۲: کاتالوگ کامل حرکات یوگا/ورزش/تنفس/یادگیری. شامل referenceImageUrl و audioCueId برای فایل‌های صوتی و تصویری در Storage. نوشتن فقط با کلید سرور.",
+      "columns": [
+        {
+          "$id": "category",
+          "type": "string",
+          "size": 16,
+          "required": true,
+          "default": "yoga"
+        },
+        {
+          "$id": "titleFa",
+          "type": "string",
+          "size": 128,
+          "required": true
+        },
+        {
+          "$id": "slug",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "level",
+          "type": "integer",
+          "required": false,
+          "default": 1
+        },
+        {
+          "$id": "durationSec",
+          "type": "integer",
+          "required": false,
+          "default": 60
+        },
+        {
+          "$id": "reps",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "instructionsFa",
+          "type": "string",
+          "size": 2048,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "audioCueId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "referenceImageUrl",
+          "type": "string",
+          "size": 1024,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "referenceImagePromptTemplate",
+          "type": "string",
+          "size": 4096,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "orderIndex",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "tags",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": "[]"
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "moveSlugIdx",
+          "type": "unique",
+          "attributes": [
+            "slug"
+          ]
+        },
+        {
+          "$id": "moveCategoryIdx",
+          "type": "key",
+          "attributes": [
+            "category",
+            "orderIndex"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "sketch_references",
+      "databaseId": "main_db",
+      "name": "مرجع‌های نقاشی",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "_note": "پرامپت ۰۲: گالری مرجع‌های سیاه‌قلم تولیدشده برای هر کاربر. هر سطر متعلق به یک کاربر است و شامل URL تصویر، موضوع، و سطح مهارت.",
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "subject",
+          "type": "string",
+          "size": 32,
+          "required": true
+        },
+        {
+          "$id": "level",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "$id": "titleFa",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "imageUrl",
+          "type": "string",
+          "size": 1024,
+          "required": true
+        },
+        {
+          "$id": "generatedAtIso",
+          "type": "string",
+          "size": 32,
+          "required": true
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "sketchUserIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "generatedAtIso"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "wellness_logs",
+      "databaseId": "main_db",
+      "name": "گزارش جلسه‌ی سلامتی",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "_note": "پرامپت ۰۲: ثبت هر جلسه‌ی انجام‌شده (یوگا/ورزش/تنفس/یادگیری) به تفکیک تاریخ.",
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "moveSlug",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "category",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "dayIso",
+          "type": "string",
+          "size": 10,
+          "required": true
+        },
+        {
+          "$id": "secondsSpent",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "completed",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "wellnessLogUserDayIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "dayIso"
+          ]
+        }
+      ]
     }
   ],
   "buckets": [
@@ -1027,6 +1464,17 @@
       "maximumFileSize": 10485760,
       "fileSecurity": true,
       "permissions": []
+    },
+    {
+      "$id": "wellness-media",
+      "name": "رسانه‌ی سلامتی",
+      "enabled": true,
+      "maximumFileSize": 5242880,
+      "fileSecurity": true,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "_note": "پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات یوگا/ورزش/تنفس و مرجع‌های سیاه‌قلم. read=any چون محتوا عمومی است."
     }
   ],
   "functions": [
@@ -1173,6 +1621,27 @@
       ],
       "events": [],
       "schedule": ""
+    },
+    {
+      "$id": "generate-sketch-reference",
+      "name": "generate-sketch-reference",
+      "runtime": "node-20.0",
+      "path": "functions/generate-sketch-reference",
+      "entrypoint": "src/main.js",
+      "timeout": 60,
+      "enabled": true,
+      "logging": true,
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "schedule": "",
+      "_env": {
+        "IMAGE_GEN_API_KEY": "کلید سرویس تولید تصویر (Gemini/DALL-E/Replicate). اختیاری؛ بدون آن تابع یک URL ثابت برمی‌گرداند.",
+        "IMAGE_GEN_ENDPOINT": "پیش‌فرض https://generativelanguage.googleapis.com/v1beta/models (Gemini)",
+        "WELLNESS_BUCKET_ID": "wellness-media"
+      },
+      "_note": "پرامپت ۰۲: تولید تصویر مرجع سیاه‌قلم برای تمرین نقاشی. ورودی: { subject, level }. خروجی: URL تصویر سیاه‌وسفید برای کپی با مداد."
     }
   ]
 }

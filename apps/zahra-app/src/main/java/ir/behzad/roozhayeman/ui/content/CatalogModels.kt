@@ -19,6 +19,16 @@ data class Lesson(
     val subject: String,
     val grade: Int,
     val body: String,
+    /** پرامپت ۰۱: کد کتاب برای سینک پیشرفت (مثل C905). */
+    val bookCode: String = "",
+    /** پرامپت ۰۱: شماره‌ی درس در کتاب. */
+    val lessonNumber: Int = 0,
+    /** پرامپت ۰۱: آدرس ویدیوی آموزشی (MP4). خالی = بدون ویدیو. */
+    val videoUrl: String = "",
+    /** پرامپت ۰۱: آدرس صوتی آموزشی (MP3). خالی = بدون صوت. */
+    val audioUrl: String = "",
+    /** پرامپت ۰۱: نشانه‌های فصل (به ثانیه). */
+    val chapterMarkers: List<Double> = emptyList(),
 )
 
 /** سؤال چهارگزینه‌ای. */

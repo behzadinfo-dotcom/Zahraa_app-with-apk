@@ -19,7 +19,7 @@ class AppwriteClientProvider(
     val endpoint: String,
     val projectId: String,
     val databaseId: String = TableIds.DATABASE,
-) {
+) : BackendConfig {
     private val appContext = context.applicationContext
 
     val isConfigured: Boolean get() = projectId.isNotBlank()

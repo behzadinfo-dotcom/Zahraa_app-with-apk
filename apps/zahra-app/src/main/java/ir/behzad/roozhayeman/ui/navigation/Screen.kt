@@ -68,6 +68,10 @@ sealed class Screen(val route: String) {
     data object Lock : Screen("lock")
     data object Reminders : Screen("reminders")
     data object Sync : Screen("sync")
+    /** پرامپت ۰۲: ماژول سلامتی (یوگا/ورزش/تنفس/یادگیری). */
+    data object Wellness : Screen("wellness")
+    /** پرامپت ۰۲: گالری مرجع‌های نقاشی سیاه‌قلم. */
+    data object SketchGallery : Screen("sketch-gallery")
 }
 
 data class Tab(val route: String, val icon: ImageVector, val label: String)
