@@ -26,6 +26,20 @@ fun readLessonIds(store: LocalStore): Set<String> =
 fun lessonReadDate(store: LocalStore, lessonId: String): String =
     store.getString(LESSON_READ_PREFIX + lessonId)
 
+/**
+ * وضعیت «دیده‌شدن» کارت پیش‌نیاز هر درس (فایل توسعه ۰۶).
+ * برای گزارش پیشرفت والدین/معلم ذخیره می‌شود؛ مثل بقیه‌ی پیشرفت، فقط روی دستگاه.
+ */
+const val PREREQ_SEEN_PREFIX = "lesson_prereq_seen_"
+
+fun markPrerequisiteSeen(store: LocalStore, lessonId: String) {
+    if (lessonId.isBlank()) return
+    store.putString(PREREQ_SEEN_PREFIX + lessonId, JalaliDate.todayIso())
+}
+
+fun prerequisiteSeenDate(store: LocalStore, lessonId: String): String =
+    store.getString(PREREQ_SEEN_PREFIX + lessonId)
+
 /** چند روز پشت‌سرهم درس خوانده شده (استریک مطالعه؛ مثل استریک نقاشی). */
 fun lessonStreak(store: LocalStore, today: LocalDate = LocalDate.now()): Int {
     val days = store.keysWithPrefix(LESSON_READ_PREFIX)

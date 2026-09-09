@@ -81,6 +81,10 @@ fun SettingsScreen(nav: NavController) {
                 "پیش‌فرض «استیج عروسکی»؛ در حالت شب خودکار تیره می‌شود.",
             ) { }
             SectionCard(
+                "مدل‌های هوش مصنوعی",
+                "افزودن/سوییچ چند مدل AI و مدیریت کلید (فقط ادمین).",
+            ) { nav.navigate(Screen.AiProviders.route) }
+            SectionCard(
                 "نقش حساب",
                 "نقش از Labelهای سرور می‌آید: ${container.role.label}",
             ) { }
@@ -501,8 +505,11 @@ fun RemindersScreen(onBack: () -> Unit) {
 fun SyncScreen(onBack: () -> Unit) {
     val container = LocalAppContainer.current
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
     var status by remember { mutableStateOf(buildStatus(container)) }
     var busy by remember { mutableStateOf(false) }
+    var googleBusy by remember { mutableStateOf(false) }
+    var googleNote by remember { mutableStateOf<String?>(null) }
 
     Column(
         Modifier
@@ -516,6 +523,29 @@ fun SyncScreen(onBack: () -> Unit) {
                     Text("وضعیت بک‌اند", style = MaterialTheme.typography.titleSmall)
                     Spacer(Modifier.height(4.dp))
                     Text(status, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            // ورود با گوگل (فایل توسعه ۰۴ بخش ۱): بعد از بازگشت از مرورگر، session
+            // دوباره از سرور خوانده می‌شود تا در حالت loading گیر نکند.
+            if (container.isBackendConfigured) {
+                Card(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text("ورود با گوگل", style = MaterialTheme.typography.titleSmall)
+                        PrimaryButton(if (googleBusy) "در حال ورود…" else "ورود با حساب گوگل") {
+                            if (googleBusy) return@PrimaryButton
+                            val activity = context as? androidx.activity.ComponentActivity
+                            if (activity == null) { googleNote = "ورود با گوگل روی این صفحه در دسترس نیست."; return@PrimaryButton }
+                            googleBusy = true; googleNote = null
+                            scope.launch {
+                                when (val r = container.auth.signInWithGoogle(activity)) {
+                                    is ir.behzad.platform.core.common.AppResult.Ok -> { googleNote = "وارد شدی: ${r.value.name.ifBlank { r.value.email }}"; status = buildStatus(container) }
+                                    is ir.behzad.platform.core.common.AppResult.Err -> googleNote = r.error.userMessage
+                                }
+                                googleBusy = false
+                            }
+                        }
+                        googleNote?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary) }
+                    }
                 }
             }
             PrimaryButton(if (busy) "در حال همگام‌سازی…" else "همگام‌سازی حالا") {

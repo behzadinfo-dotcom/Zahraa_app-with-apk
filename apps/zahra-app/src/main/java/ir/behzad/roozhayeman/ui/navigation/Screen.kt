@@ -46,6 +46,29 @@ sealed class Screen(val route: String) {
         fun of(id: String) = "lesson/${Uri.encode(id)}"
     }
     data object Placement : Screen("placement")
+
+    /**
+     * پلیر رسانه‌ی درس (فایل توسعه ۰۱): ویدیو یا صوت با حافظه و سینک.
+     * پارامترها: شناسه‌ی درس، نوع (video/audio)، آدرس فایل و عنوان.
+     */
+    data object LessonMedia : Screen("lessonmedia?lessonId={lessonId}&type={type}&uri={uri}&title={title}&book={book}") {
+        fun of(lessonId: String, type: String, uri: String, title: String, book: String = "") =
+            "lessonmedia?lessonId=${Uri.encode(lessonId)}&type=${Uri.encode(type)}&uri=${Uri.encode(uri)}&title=${Uri.encode(title)}&book=${Uri.encode(book)}"
+    }
+
+    /** ماژول ورزش/یوگا/تنفس کامل + مرجع نقاشی (فایل توسعه ۰۲). */
+    data object Wellness : Screen("wellness")
+    data object WellnessDetail : Screen("wellness/{id}") { fun of(id: String) = "wellness/${Uri.encode(id)}" }
+    data object SketchReference : Screen("sketchref")
+
+    /** آزمون بازه‌ای و نکات ضعف و برنامه‌ی مرور هفتگی (فایل توسعه ۰۷). */
+    data object ExamCenter : Screen("examcenter")
+    data object ExamRun : Screen("exam/{id}") { fun of(id: String) = "exam/${Uri.encode(id)}" }
+    data object WeakTopics : Screen("weaktopics/{id}") { fun of(id: String) = "weaktopics/${Uri.encode(id)}" }
+    data object WeeklyPlan : Screen("weeklyplan")
+
+    /** تنظیمات چند-مدلی هوش مصنوعی (فایل توسعه ۰۴). */
+    data object AiProviders : Screen("aiproviders")
     /** نقشه‌ی راه. `track` اختیاری است تا ماژول هوش مصنوعی فقط گره‌های خودش را ببیند. */
     data object Roadmap : Screen("roadmap?track={track}") {
         fun of(track: String? = null) = if (track.isNullOrBlank()) "roadmap" else "roadmap?track=${Uri.encode(track)}"

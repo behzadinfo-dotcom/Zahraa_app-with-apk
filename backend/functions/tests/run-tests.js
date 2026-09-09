@@ -137,6 +137,85 @@ const check = (label, cond, extra = '') => { if (cond) { pass++; console.log('  
   r = await call('album-consent', { body: { action: 'delete-everything', itemId: 'item1' } });
   check('عمل نامعتبر → ۴۰۰', r.code === 400);
 
+  console.log('— ai-companion (چند-مدلی + بحران)');
+  delete process.env.AI_API_KEY; delete process.env.AI_MODEL; delete process.env.AI_MODELS;
+  r = await call('ai-companion', { body: { message: 'دیگه نمی‌تونم ادامه بدم' } });
+  check('پیام بحران اصلاً به مدل نمی‌رود', r.payload.ok === true && r.payload.crisis === true &&
+        r.payload.model === 'safety-local' && Array.isArray(r.payload.helplines), JSON.stringify(r.payload).slice(0, 120));
+  r = await call('ai-companion', { body: { message: 'سلام حالت چطوره' } });
+  check('بدون provider و بدون env → not_configured', r.payload.ok === false && r.payload.error === 'not_configured');
+  r = await call('ai-companion', { body: { message: '' } });
+  check('پیام خالی → empty_message', r.payload.ok === false && r.payload.error === 'empty_message');
+
+  // مسیر واقعی مدل با provider محیطی و fetch ساختگی (بدون شبکه).
+  const realFetch = global.fetch;
+  process.env.AI_API_KEY = 'test-key';
+  process.env.AI_MODEL = 'test-model';
+  let capturedAuth = '';
+  global.fetch = async (url, opts) => {
+    capturedAuth = (opts.headers && opts.headers.Authorization) || '';
+    return { ok: true, json: async () => ({ choices: [{ message: { content: 'سلام! امروز چطوری؟' } }] }) };
+  };
+  r = await call('ai-companion', { body: { message: 'سلام' } });
+  check('provider محیطی → پاسخ مدل با برچسب env', r.payload.ok === true && r.payload.reply.includes('چطوری') &&
+        r.payload.provider === 'env' && capturedAuth === 'Bearer test-key', JSON.stringify(r.payload).slice(0, 140));
+  // خطای upstream → fallback (اینجا فقط یک provider هست، پس error برمی‌گردد نه crash).
+  global.fetch = async () => ({ ok: false, status: 429, json: async () => ({}) });
+  r = await call('ai-companion', { body: { message: 'سلام' } });
+  check('upstream خطا → پاسخ صادقانه با fallback', r.payload.ok === false && r.payload.error === 'upstream_error' && !!r.payload.fallback);
+  global.fetch = realFetch;
+  delete process.env.AI_API_KEY; delete process.env.AI_MODEL;
+
+  console.log('— generate-recipe');
+  const recipeSlug = (name) => {
+    const norm = String(name).trim().replace(/[يی]/g, 'ی').replace(/ك/g, 'ک').toLowerCase();
+    let h = 0; for (let i = 0; i < norm.length; i += 1) { h = (h * 31 + norm.charCodeAt(i)) >>> 0; }
+    return `recipe-ai-${h.toString(36)}`;
+  };
+  r = await call('generate-recipe', { body: { name: '' } });
+  check('نام خالی → empty_name', r.payload.ok === false && r.payload.error === 'empty_name');
+  const cachedId = recipeSlug('قورمه‌سبزی');
+  store.recipes = store.recipes || [];
+  store.recipes.push({ $id: cachedId, data: { title: 'قورمه‌سبزی', ingredients: JSON.stringify(['گوشت', 'لوبیا']), steps: JSON.stringify(['سرخ کن', 'بجوشان']), minutes: 90, servings: 4, difficulty: 'آسان', tip: 'ایرانی', source: 'ai-generated' } });
+  r = await call('generate-recipe', { body: { name: 'قورمه‌سبزی' } });
+  check('کش: دستور موجود بدون مدل برمی‌گردد', r.payload.ok === true && r.payload.cached === true &&
+        r.payload.recipe.title === 'قورمه‌سبزی' && r.payload.recipe.steps.length === 2, JSON.stringify(r.payload).slice(0, 160));
+  r = await call('generate-recipe', { body: { name: 'یک غذای کاملاً تازه' } });
+  check('نبودِ کش + نبودِ provider → not_configured', r.payload.ok === false && r.payload.error === 'not_configured');
+
+  console.log('— generate-move-image / generate-sketch-reference');
+  r = await call('generate-move-image', { body: { moveId: 'yoga-01', moveTitle: 'کودک' } });
+  check('بدون عکس پروفایل → no_avatar', r.payload.ok === false && r.payload.error === 'no_avatar');
+  r = await call('generate-move-image', { userId: '', body: { moveId: 'x' } });
+  check('بدون کاربر → ۴۰۱', r.code === 401);
+  r = await call('generate-move-image', { body: { moveId: 'yoga-01', avatarFileId: 'ava1' } });
+  check('با آواتار ولی بدون سرویس تصویر → not_configured', r.payload.ok === false && r.payload.error === 'not_configured');
+  r = await call('generate-sketch-reference', { body: { subject: 'چهره', level: 2 } });
+  check('سطح خارج از ۴..۱۰ → bad_level', r.payload.ok === false && r.payload.error === 'bad_level');
+  r = await call('generate-sketch-reference', { body: { subject: 'چهره', level: 7 } });
+  check('سطح معتبر ولی بدون سرویس تصویر → not_configured', r.payload.ok === false && r.payload.error === 'not_configured');
+
+  console.log('— weekly-plan-engine (منطق خالص)');
+  const wpe = require('../weekly-plan-engine/src/main.js');
+  const schedule = [
+    { id: 'w0-sat', cycleWeekIndex: 0, dayOfWeek: 'saturday', classSlots: [{ bookCode: 'C905', startTime: '08:00', endTime: '09:30' }] },
+    { id: 'w0-sun', cycleWeekIndex: 0, dayOfWeek: 'sunday', classSlots: [{ bookCode: 'C909', startTime: '08:00', endTime: '09:30' }] },
+  ];
+  // امروز شنبه فرض شود تا «فردا» یکشنبه (C909) باشد. 2024-03-23 = شنبه.
+  let built = wpe.buildTasks(schedule, [], '2024-03-23', 0);
+  check('فردا کلاس C909 → تسک فلش‌کارت و پیش‌نیاز', built.tomorrowName === 'sunday' &&
+        built.tasks.some((t) => t.bookCode === 'C909' && t.type === 'flashcard') &&
+        built.tasks.some((t) => t.bookCode === 'C909' && t.type === 'prerequisite'), JSON.stringify(built));
+  built = wpe.buildTasks(schedule, [
+    { bookCode: 'C905', weakTopics: ['اتحادها', 'رادیکال'], takenAtIso: '2024-03-22' },
+  ], '2024-03-23', 0);
+  check('نقطه‌ضعف ۷ روز اخیر → تسک exam', built.tasks.some((t) => t.bookCode === 'C905' && t.type === 'exam'));
+  // روز آزاد: پنجشنبه (2024-03-28) هیچ کلاسی در schedule ندارد.
+  built = wpe.buildTasks(schedule, [
+    { bookCode: 'C905', weakTopics: ['اتحادها'], takenAtIso: '2024-03-26' },
+  ], '2024-03-28', 0);
+  check('روز آزاد + نقطه‌ضعف → مرور آزاد', built.tasks.some((t) => t.refId === 'C905-free-review'));
+
   console.log(`\n${pass} پاس / ${fail} شکست`);
   process.exit(fail ? 1 : 0);
 })();

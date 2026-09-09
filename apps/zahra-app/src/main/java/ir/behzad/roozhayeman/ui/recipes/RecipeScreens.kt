@@ -21,15 +21,18 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import ir.behzad.platform.core.common.AppResult
 import ir.behzad.platform.core.common.JalaliDate
 import ir.behzad.platform.core.designsystem.AppTopBar
 import ir.behzad.platform.core.designsystem.PrimaryButton
 import ir.behzad.platform.core.designsystem.SectionCard
 import ir.behzad.roozhayeman.LocalAppContainer
 import ir.behzad.roozhayeman.ui.content.Recipe
+import kotlinx.coroutines.launch
 
 private const val COOKED_KEY = "recipe_cooked_"
 
@@ -81,6 +84,28 @@ fun RecipesScreen(onBack: () -> Unit, onDetail: (String) -> Unit) {
                     if (recipes.isEmpty()) "فهرست در حال آماده‌سازی است…" else "با این جست‌وجو چیزی پیدا نشد.",
                     style = MaterialTheme.typography.bodyMedium,
                 )
+                // فایل توسعه ۰۳: اگر دستور پخت محلی نبود، از سرور (تابع generate-recipe) بخواه.
+                if (query.isNotBlank() && recipes.isNotEmpty()) {
+                    val scope = rememberCoroutineScope()
+                    var busy by remember(query) { mutableStateOf(false) }
+                    var note by remember(query) { mutableStateOf<String?>(null) }
+                    PrimaryButton(if (busy) "در حال ساختن دستور «${query.trim()}»…" else "دستور «${query.trim()}» را بساز") {
+                        if (busy) return@PrimaryButton
+                        busy = true; note = null
+                        scope.launch {
+                            when (val r = container.serverActions.generateRecipe(query.trim())) {
+                                is AppResult.Ok -> {
+                                    // کش سرور پر شد؛ فهرست را دوباره می‌خوانیم تا دستور تازه بیاید.
+                                    recipes = container.catalog.recipes()
+                                    note = if (r.value.cached) "از قبل ذخیره بود." else "ساخته و ذخیره شد."
+                                }
+                                is AppResult.Err -> note = r.error.userMessage
+                            }
+                            busy = false
+                        }
+                    }
+                    note?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
             }
             results.forEach { r ->
                 val cooked = container.store.getString(COOKED_KEY + r.id).isNotEmpty()

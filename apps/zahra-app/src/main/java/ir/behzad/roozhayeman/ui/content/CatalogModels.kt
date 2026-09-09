@@ -41,6 +41,43 @@ data class LearningNode(
     val isUnlocked: Boolean get() = prerequisiteId.isBlank()
 }
 
+/**
+ * ماژول «پیش‌نیاز و جمع‌بندی» ابتدای هر درس (فایل توسعه ۰۶).
+ * قبل از محتوای اصلی درس نمایش داده می‌شود تا نکات پایه‌ی سال‌های قبل یادآوری شود.
+ */
+data class LessonPrerequisite(
+    val id: String,
+    val lessonId: String,
+    val type: String, // formula | grammar | vocabulary | concept
+    val titleFa: String,
+    val contentFa: String,
+    val flashcardSetId: String,
+    val orderIndex: Int,
+) {
+    /** برچسب فارسی نوع پیش‌نیاز برای نمایش. */
+    val typeLabelFa: String
+        get() = when (type) {
+            "formula" -> "فرمول"
+            "grammar" -> "گرامر"
+            "vocabulary" -> "واژگان"
+            "concept" -> "مفهوم پایه"
+            else -> "یادآوری"
+        }
+}
+
+/**
+ * آزمون بازه‌ای یک کتاب/بازه‌ی درسی (فایل توسعه ۰۷).
+ * سؤال‌ها با `questionIds` به بانک سؤال (`quizzes`) اشاره می‌کنند.
+ */
+data class Exam(
+    val id: String,
+    val bookCode: String,
+    val rangeGroup: String,
+    val titleFa: String,
+    val questionIds: List<String>,
+    val dueAtIso: String,
+)
+
 /** ایده‌ی روز برای سیاه‌قلم/اسکیس. */
 data class ArtPrompt(
     val id: String,

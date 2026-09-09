@@ -56,6 +56,10 @@ import ir.behzad.roozhayeman.ui.settings.RemindersScreen
 import ir.behzad.roozhayeman.ui.settings.SettingsScreen
 import ir.behzad.roozhayeman.ui.settings.SyncScreen
 import ir.behzad.roozhayeman.ui.study.AudiobookScreen
+import ir.behzad.roozhayeman.ui.study.ExamCenterScreen
+import ir.behzad.roozhayeman.ui.study.ExamRunScreen
+import ir.behzad.roozhayeman.ui.study.WeakTopicsScreen
+import ir.behzad.roozhayeman.ui.study.WeeklyPlanScreen
 import ir.behzad.roozhayeman.ui.study.LibraryScreen
 import ir.behzad.roozhayeman.ui.study.PdfUploadScreen
 import ir.behzad.roozhayeman.ui.study.ProgressChartsScreen
@@ -142,6 +146,26 @@ fun ZahraNavHost() {
             }
             composable(Screen.Placement.route) { PlacementTestScreen { nav.popBackStack() } }
             composable(
+                Screen.LessonMedia.route,
+                listOf(
+                    navArgument("lessonId") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("type") { type = NavType.StringType; defaultValue = "video" },
+                    navArgument("uri") { type = NavType.StringType; defaultValue = "" },
+                    navArgument("title") { type = NavType.StringType; defaultValue = "درس" },
+                    navArgument("book") { type = NavType.StringType; defaultValue = "" },
+                ),
+            ) { e ->
+                val type = if (e.arguments?.getString("type") == "audio") ir.behzad.roozhayeman.ui.content.MediaType.AUDIO else ir.behzad.roozhayeman.ui.content.MediaType.VIDEO
+                ir.behzad.roozhayeman.ui.study.LessonMediaScreen(
+                    lessonId = e.arguments?.getString("lessonId").orEmpty(),
+                    mediaType = type,
+                    mediaUri = e.arguments?.getString("uri").orEmpty(),
+                    title = e.arguments?.getString("title").orEmpty(),
+                    bookCode = e.arguments?.getString("book").orEmpty(),
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(
                 Screen.Roadmap.route,
                 listOf(navArgument("track") { type = NavType.StringType; defaultValue = "" }),
             ) { entry ->
@@ -176,6 +200,22 @@ fun ZahraNavHost() {
                     onBack = { nav.popBackStack() },
                 )
             }
+            composable(Screen.Wellness.route) {
+                ir.behzad.roozhayeman.ui.wellness.WellnessScreen(
+                    onMoveClick = { id -> nav.navigate(Screen.WellnessDetail.of(id)) },
+                    onSketch = { nav.navigate(Screen.SketchReference.route) },
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Screen.WellnessDetail.route, listOf(navArgument("id") { type = NavType.StringType })) { e ->
+                ir.behzad.roozhayeman.ui.wellness.WellnessDetailScreen(
+                    moveId = e.arguments?.getString("id").orEmpty(),
+                    onBack = { nav.popBackStack() },
+                )
+            }
+            composable(Screen.SketchReference.route) {
+                ir.behzad.roozhayeman.ui.wellness.SketchReferenceScreen { nav.popBackStack() }
+            }
             composable(Screen.Water.route) { WaterScreen() }
             composable(Screen.Pairing.route) { ZahraPairingScreen(c.pairing) { nav.popBackStack() } }
             composable(Screen.Call.route) {
@@ -194,6 +234,27 @@ fun ZahraNavHost() {
             composable(Screen.Lock.route) { AppLockScreen { nav.popBackStack() } }
             composable(Screen.Reminders.route) { RemindersScreen { nav.popBackStack() } }
             composable(Screen.Sync.route) { SyncScreen { nav.popBackStack() } }
+            composable(Screen.AiProviders.route) {
+                ir.behzad.roozhayeman.ui.settings.AiProvidersScreen { nav.popBackStack() }
+            }
+            composable(Screen.ExamCenter.route) { ExamCenterScreen(nav) }
+            composable(
+                Screen.ExamRun.route,
+                listOf(navArgument("id") { type = NavType.StringType }),
+            ) { entry ->
+                ExamRunScreen(
+                    examId = entry.arguments?.getString("id").orEmpty(),
+                    onBack = { nav.popBackStack() },
+                    onReview = { examId -> nav.navigate(Screen.WeakTopics.of(examId)) },
+                )
+            }
+            composable(
+                Screen.WeakTopics.route,
+                listOf(navArgument("id") { type = NavType.StringType }),
+            ) { entry ->
+                WeakTopicsScreen(examId = entry.arguments?.getString("id").orEmpty(), nav = nav)
+            }
+            composable(Screen.WeeklyPlan.route) { WeeklyPlanScreen(nav) }
         }
     }
 }

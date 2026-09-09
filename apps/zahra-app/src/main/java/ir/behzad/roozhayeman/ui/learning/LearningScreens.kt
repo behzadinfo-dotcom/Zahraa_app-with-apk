@@ -1,13 +1,18 @@
 package ir.behzad.roozhayeman.ui.learning
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,7 +30,9 @@ import ir.behzad.platform.core.designsystem.SectionCard
 import ir.behzad.roozhayeman.LocalAppContainer
 import ir.behzad.roozhayeman.ui.content.LearningNode
 import ir.behzad.roozhayeman.ui.content.Lesson
+import ir.behzad.roozhayeman.ui.content.LessonPrerequisite
 import ir.behzad.roozhayeman.ui.content.markLessonRead
+import ir.behzad.roozhayeman.ui.content.markPrerequisiteSeen
 import ir.behzad.roozhayeman.ui.content.QuizQuestion
 import ir.behzad.roozhayeman.ui.navigation.Screen
 import java.time.LocalDate
@@ -90,9 +97,11 @@ fun LearningHomeScreen(nav: NavController) {
 fun LessonScreen(lessonId: String, onBack: () -> Unit, onQuiz: (String) -> Unit) {
     val container = LocalAppContainer.current
     var lesson by remember { mutableStateOf<Lesson?>(null) }
+    var prerequisites by remember { mutableStateOf<List<LessonPrerequisite>>(emptyList()) }
 
     LaunchedEffect(lessonId) {
         lesson = container.catalog.lesson(lessonId)
+        prerequisites = container.catalog.prerequisitesFor(lessonId)
         // «خوانده‌شدن» درس؛ پایه‌ی نمودار پیشرفت و استریک مطالعه.
         if (lesson != null) markLessonRead(container.store, lessonId)
     }
@@ -118,11 +127,67 @@ fun LessonScreen(lessonId: String, onBack: () -> Unit, onQuiz: (String) -> Unit)
                 current.subject + if (current.grade > 0) " · پایه ${current.grade}" else "",
                 style = MaterialTheme.typography.bodySmall,
             )
+            // ماژول پیش‌نیاز (فایل توسعه ۰۶): بالای محتوای اصلی، آکاردئون باز به‌صورت پیش‌فرض.
+            if (prerequisites.isNotEmpty()) {
+                PrerequisiteAccordion(
+                    prerequisites = prerequisites,
+                    onSeen = { markPrerequisiteSeen(container.store, lessonId) },
+                    onFlashcards = { onQuiz(current.id) },
+                )
+            }
             current.body.split("\n").filter { it.isNotBlank() }.forEach { paragraph ->
                 Text(paragraph, style = MaterialTheme.typography.bodyLarge)
             }
             PrimaryButton("آزمون این درس") { onQuiz(current.id) }
             PrimaryButton("بازگشت", onBack)
+        }
+    }
+}
+
+/**
+ * کارت آکاردئونی «قبل از شروع، این نکات را مرور کن» (فایل توسعه ۰۶).
+ * پیش‌فرض باز است تا دیده شود؛ با یک ضربه جمع/باز می‌شود و وضعیت دیده‌شدن ثبت می‌شود.
+ */
+@Composable
+private fun PrerequisiteAccordion(
+    prerequisites: List<LessonPrerequisite>,
+    onSeen: () -> Unit,
+    onFlashcards: () -> Unit,
+) {
+    var expanded by remember { mutableStateOf(true) }
+    // اولین باری که کارت را می‌بیند (باز است)، «دیده‌شد» ثبت می‌شود.
+    LaunchedEffect(Unit) { onSeen() }
+
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = !expanded },
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Text("قبل از شروع، این نکات را مرور کن", style = MaterialTheme.typography.titleMedium)
+                Text(if (expanded) "▲" else "▼", style = MaterialTheme.typography.titleMedium)
+            }
+            if (expanded) {
+                prerequisites.forEach { pre ->
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Text("${pre.typeLabelFa} · ${pre.titleFa}", style = MaterialTheme.typography.titleSmall)
+                        if (pre.contentFa.isNotBlank()) {
+                            Text(pre.contentFa, style = MaterialTheme.typography.bodyMedium)
+                        }
+                        if (pre.flashcardSetId.isNotBlank()) {
+                            TextButton(onClick = onFlashcards) { Text("مرور فلش‌کارت پیش‌نیاز") }
+                        }
+                    }
+                }
+            } else {
+                Text(
+                    "برای دیدن نکات پایه ضربه بزن.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }

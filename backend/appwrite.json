@@ -987,6 +987,746 @@
         }
       ],
       "indexes": []
+    },
+    {
+      "$id": "ai_providers",
+      "databaseId": "main_db",
+      "name": "ارائه‌دهنده‌های هوش مصنوعی",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "providerName",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "apiKeyEncrypted",
+          "type": "string",
+          "size": 2048,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "apiKeyLast4",
+          "type": "string",
+          "size": 8,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "modelId",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "endpointUrl",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": "https://api.openai.com/v1/chat/completions"
+        },
+        {
+          "$id": "imageEndpointUrl",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "isActive",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "priority",
+          "type": "integer",
+          "required": false,
+          "default": 100
+        },
+        {
+          "$id": "usedFor",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "array": true
+        },
+        {
+          "$id": "createdAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "providerActiveIdx",
+          "type": "key",
+          "attributes": [
+            "isActive",
+            "priority"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "ai_usage",
+      "databaseId": "main_db",
+      "name": "مصرف هوش مصنوعی",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "providerId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "usedFor",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "month",
+          "type": "string",
+          "size": 8,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "calls",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "updatedAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "lesson_media_progress",
+      "databaseId": "main_db",
+      "name": "پیشرفت رسانه‌ی درس",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "lessonId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "mediaType",
+          "type": "string",
+          "size": 8,
+          "required": false,
+          "default": "video"
+        },
+        {
+          "$id": "lastPositionSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "durationSec",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "playbackSpeed",
+          "type": "double",
+          "required": false,
+          "default": 1
+        },
+        {
+          "$id": "isCompleted",
+          "type": "boolean",
+          "required": false,
+          "default": false
+        },
+        {
+          "$id": "viewCount",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "viewHistory",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "seekJumps",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "updatedAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "mediaUserLessonIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "lessonId",
+            "mediaType"
+          ],
+          "orders": [
+            "ASC",
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "wellness_moves",
+      "databaseId": "main_db",
+      "name": "حرکات ورزش/یوگا/تنفس",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "columns": [
+        {
+          "$id": "category",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "titleFa",
+          "type": "string",
+          "size": 128,
+          "required": true
+        },
+        {
+          "$id": "level",
+          "type": "integer",
+          "required": false,
+          "default": 1
+        },
+        {
+          "$id": "durationSec",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "reps",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "instructionsFa",
+          "type": "string",
+          "size": 4096,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "audioCueId",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "referenceImagePromptTemplate",
+          "type": "string",
+          "size": 2048,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "defaultImageUrl",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "orderIndex",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "moveCategoryIdx",
+          "type": "key",
+          "attributes": [
+            "category",
+            "orderIndex"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "move_images",
+      "databaseId": "main_db",
+      "name": "تصاویر حرکات کاربر",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "moveId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "avatarFileId",
+          "type": "string",
+          "size": 128,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "imageUrl",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "updatedAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": []
+    },
+    {
+      "$id": "sketch_references",
+      "databaseId": "main_db",
+      "name": "مرجع‌های نقاشی من",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "subject",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "level",
+          "type": "integer",
+          "required": false,
+          "default": 4
+        },
+        {
+          "$id": "imageUrl",
+          "type": "string",
+          "size": 512,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "prompt",
+          "type": "string",
+          "size": 2048,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "createdAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "sketchUserIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "createdAtMs"
+          ],
+          "orders": [
+            "ASC",
+            "DESC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "lesson_prerequisites",
+      "databaseId": "main_db",
+      "name": "پیش‌نیاز درس",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "columns": [
+        {
+          "$id": "lessonId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "type",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "default": "concept"
+        },
+        {
+          "$id": "titleFa",
+          "type": "string",
+          "size": 256,
+          "required": true
+        },
+        {
+          "$id": "contentFa",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "flashcardSetId",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "orderIndex",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "prereqLessonIdx",
+          "type": "key",
+          "attributes": [
+            "lessonId",
+            "orderIndex"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "exams",
+      "databaseId": "main_db",
+      "name": "آزمون‌های بازه‌ای",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "columns": [
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "rangeGroup",
+          "type": "string",
+          "size": 64,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "titleFa",
+          "type": "string",
+          "size": 256,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "questionIds",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "dueAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "examBookRangeIdx",
+          "type": "key",
+          "attributes": [
+            "bookCode",
+            "rangeGroup"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "exam_results",
+      "databaseId": "main_db",
+      "name": "نتایج آزمون",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "examId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "bookCode",
+          "type": "string",
+          "size": 16,
+          "required": false,
+          "default": ""
+        },
+        {
+          "$id": "answers",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "score",
+          "type": "double",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "weakTopics",
+          "type": "string",
+          "size": 4096,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "takenAtIso",
+          "type": "string",
+          "size": 32,
+          "required": false,
+          "default": ""
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "resultUserIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "takenAtIso"
+          ],
+          "orders": [
+            "ASC",
+            "DESC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "weekly_schedule",
+      "databaseId": "main_db",
+      "name": "برنامه‌ی هفتگی کلاس",
+      "enabled": true,
+      "rowSecurity": false,
+      "permissions": [
+        "read(\"any\")"
+      ],
+      "columns": [
+        {
+          "$id": "cycleWeekIndex",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "dayOfWeek",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "classSlots",
+          "type": "string",
+          "size": 4096,
+          "required": false,
+          "default": "[]"
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "scheduleCycleIdx",
+          "type": "key",
+          "attributes": [
+            "cycleWeekIndex",
+            "dayOfWeek"
+          ],
+          "orders": [
+            "ASC",
+            "ASC"
+          ]
+        }
+      ]
+    },
+    {
+      "$id": "review_plans",
+      "databaseId": "main_db",
+      "name": "برنامه‌ی مرور",
+      "enabled": true,
+      "rowSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ],
+      "columns": [
+        {
+          "$id": "userId",
+          "type": "string",
+          "size": 64,
+          "required": true
+        },
+        {
+          "$id": "dayIso",
+          "type": "string",
+          "size": 16,
+          "required": true
+        },
+        {
+          "$id": "cycleWeekIndex",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        },
+        {
+          "$id": "reviewTasks",
+          "type": "string",
+          "size": 8192,
+          "required": false,
+          "default": "[]"
+        },
+        {
+          "$id": "updatedAtMs",
+          "type": "integer",
+          "required": false,
+          "default": 0
+        }
+      ],
+      "indexes": [
+        {
+          "$id": "planUserDayIdx",
+          "type": "key",
+          "attributes": [
+            "userId",
+            "dayIso"
+          ],
+          "orders": [
+            "ASC",
+            "DESC"
+          ]
+        }
+      ]
     }
   ],
   "buckets": [
@@ -1027,6 +1767,44 @@
       "maximumFileSize": 10485760,
       "fileSecurity": true,
       "permissions": []
+    },
+    {
+      "$id": "move-images",
+      "name": "تصاویر حرکات (تولیدی)",
+      "enabled": true,
+      "maximumFileSize": 10485760,
+      "allowedFileExtensions": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp"
+      ],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true,
+      "fileSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ]
+    },
+    {
+      "$id": "sketch-references",
+      "name": "مرجع‌های نقاشی (تولیدی)",
+      "enabled": true,
+      "maximumFileSize": 10485760,
+      "allowedFileExtensions": [
+        "jpg",
+        "jpeg",
+        "png",
+        "webp"
+      ],
+      "compression": "none",
+      "encryption": true,
+      "antivirus": true,
+      "fileSecurity": true,
+      "permissions": [
+        "create(\"users\")"
+      ]
     }
   ],
   "functions": [
@@ -1095,7 +1873,8 @@
         "AI_MODELS": "مثال: qwen3.8-flash,glm-5.3-flash,mimo-v2.5,hy3 — اولی استفاده می‌شود",
         "AI_MODEL": "اگر باشد بر AI_MODELS اولویت دارد",
         "AI_MAX_TOKENS": "پیش‌فرض 400",
-        "AI_TEMPERATURE": "پیش‌فرض 0.6"
+        "AI_TEMPERATURE": "پیش‌فرض 0.6",
+        "AI_CONFIG_SECRET": "راز رمزگشایی کلیدهای کالکشن ai_providers (برای حالت چند-مدلی)"
       },
       "_note": "لایه‌ی AI همراه زهرا: کلید در اپ نیست؛ پیام بحران اصلاً به مدل فرستاده نمی‌شود؛ متن پیام لاگ/ذخیره نمی‌شود."
     },
@@ -1173,6 +1952,94 @@
       ],
       "events": [],
       "schedule": ""
+    },
+    {
+      "$id": "generate-recipe",
+      "name": "generate-recipe",
+      "runtime": "node-20.0",
+      "path": "functions/generate-recipe",
+      "entrypoint": "src/main.js",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "schedule": "",
+      "_env": {
+        "AI_API_KEY": "کلید fallback — فقط در متغیرهای محیطی؛ هرگز در ریپو",
+        "AI_ENDPOINT": "پیش‌فرض https://api.openai.com/v1/chat/completions",
+        "AI_IMAGE_ENDPOINT": "آدرس سرویس تولید تصویر (سازگار با OpenAI images)",
+        "AI_MODELS": "فهرست مدل‌ها با کاما (اولی استفاده می‌شود)",
+        "AI_MODEL": "اگر باشد بر AI_MODELS اولویت دارد",
+        "AI_CONFIG_SECRET": "راز رمزگشایی کلیدهای کالکشن ai_providers (برای حالت چند-مدلی)"
+      },
+      "_note": "تولید دستور پخت با نام غذا؛ نتیجه در کالکشن recipes کش می‌شود."
+    },
+    {
+      "$id": "generate-move-image",
+      "name": "generate-move-image",
+      "runtime": "node-20.0",
+      "path": "functions/generate-move-image",
+      "entrypoint": "src/main.js",
+      "timeout": 60,
+      "enabled": true,
+      "logging": true,
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "schedule": "",
+      "_env": {
+        "AI_API_KEY": "کلید fallback — فقط در متغیرهای محیطی؛ هرگز در ریپو",
+        "AI_ENDPOINT": "پیش‌فرض https://api.openai.com/v1/chat/completions",
+        "AI_IMAGE_ENDPOINT": "آدرس سرویس تولید تصویر (سازگار با OpenAI images)",
+        "AI_MODELS": "فهرست مدل‌ها با کاما (اولی استفاده می‌شود)",
+        "AI_MODEL": "اگر باشد بر AI_MODELS اولویت دارد",
+        "AI_CONFIG_SECRET": "راز رمزگشایی کلیدهای کالکشن ai_providers (برای حالت چند-مدلی)"
+      },
+      "_note": "تولید تصویر حرکت با شباهت چهره‌ی کاربر؛ فقط با رضایت و درخواست صریح."
+    },
+    {
+      "$id": "generate-sketch-reference",
+      "name": "generate-sketch-reference",
+      "runtime": "node-20.0",
+      "path": "functions/generate-sketch-reference",
+      "entrypoint": "src/main.js",
+      "timeout": 60,
+      "enabled": true,
+      "logging": true,
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "schedule": "",
+      "_env": {
+        "AI_API_KEY": "کلید fallback — فقط در متغیرهای محیطی؛ هرگز در ریپو",
+        "AI_ENDPOINT": "پیش‌فرض https://api.openai.com/v1/chat/completions",
+        "AI_IMAGE_ENDPOINT": "آدرس سرویس تولید تصویر (سازگار با OpenAI images)",
+        "AI_MODELS": "فهرست مدل‌ها با کاما (اولی استفاده می‌شود)",
+        "AI_MODEL": "اگر باشد بر AI_MODELS اولویت دارد",
+        "AI_CONFIG_SECRET": "راز رمزگشایی کلیدهای کالکشن ai_providers (برای حالت چند-مدلی)"
+      },
+      "_note": "تولید تصویر مرجع سیاه‌قلم سطح ۴ تا ۱۰."
+    },
+    {
+      "$id": "weekly-plan-engine",
+      "name": "weekly-plan-engine",
+      "runtime": "node-20.0",
+      "path": "functions/weekly-plan-engine",
+      "entrypoint": "src/main.js",
+      "timeout": 30,
+      "enabled": true,
+      "logging": true,
+      "execute": [
+        "users"
+      ],
+      "events": [],
+      "schedule": "",
+      "_note": "برنامه‌ی مرور روزانه بر اساس برنامه‌ی کلاسی و شیفت چرخشی (بدون مدل AI)."
     }
   ]
 }

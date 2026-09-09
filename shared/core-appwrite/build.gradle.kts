@@ -33,5 +33,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.kotlinx.coroutines.android)
     api(libs.appwrite.sdk)
+    // برای امضای createOAuth2Session(activity: ComponentActivity) — ورود با گوگل (فایل توسعه ۰۴).
+    implementation(libs.androidx.activity)
     implementation(project(":core-common"))
 }

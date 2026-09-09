@@ -46,6 +46,33 @@ object TableIds {
     const val LEARNING_NODES = "learning_nodes"
     const val ART_PROMPTS = "art_prompts"
 
+    /** حرکات ورزش/یوگا/تنفس/تکنیک یادگیری (فایل توسعه ۰۲). */
+    const val WELLNESS_MOVES = "wellness_moves"
+
+    /** پیش‌نیاز و جمع‌بندی ابتدای هر درس (فایل توسعه ۰۶). */
+    const val LESSON_PREREQUISITES = "lesson_prerequisites"
+
+    /** آزمون‌های بازه‌ای و برنامه‌ی کلاسی (فایل توسعه ۰۷). */
+    const val EXAMS = "exams"
+    const val WEEKLY_SCHEDULE = "weekly_schedule"
+
+    // --- تنظیمات چند-مدلی هوش مصنوعی (فایل توسعه ۰۴) ---
+    /** ارائه‌دهنده‌های AI؛ کلید فقط رمزنگاری‌شده، فقط ۴ رقم آخر در کلاینت دیده می‌شود. */
+    const val AI_PROVIDERS = "ai_providers"
+    const val AI_USAGE = "ai_usage"
+
+    // --- داده‌ی خصوصی هر کاربر (rowSecurity) ---
+    /** پیشرفت پلیر ویدیو/صوت درس، سینک بین دستگاه‌ها (فایل توسعه ۰۱). */
+    const val LESSON_MEDIA_PROGRESS = "lesson_media_progress"
+
+    /** تصویر تولیدیِ حرکت با چهره‌ی کاربر و گالری مرجع نقاشی (فایل توسعه ۰۲). */
+    const val MOVE_IMAGES = "move_images"
+    const val SKETCH_REFERENCES = "sketch_references"
+
+    /** نتایج آزمون و برنامه‌ی مرور تولیدشده (فایل توسعه ۰۷). */
+    const val EXAM_RESULTS = "exam_results"
+    const val REVIEW_PLANS = "review_plans"
+
     /**
      * همه‌ی جداولی که واقعاً در Appwrite ساخته می‌شوند
      * (مطابق `backend/appwrite.json` — ۱۹ جدول).
@@ -55,6 +82,9 @@ object TableIds {
         FATHER_MESSAGES, ALBUM_ITEMS, CALL_SESSIONS, CALL_SIGNALS,
         WEEKLY_SUMMARIES, ROUTINE_BLOCKS, WATER_LOGS, EXERCISE_LOGS, BADGES,
         LESSONS, QUIZZES, RECIPES, EXERCISES, LEARNING_NODES, ART_PROMPTS,
+        WELLNESS_MOVES, LESSON_PREREQUISITES, EXAMS, WEEKLY_SCHEDULE,
+        AI_PROVIDERS, AI_USAGE,
+        LESSON_MEDIA_PROGRESS, MOVE_IMAGES, SKETCH_REFERENCES, EXAM_RESULTS, REVIEW_PLANS,
     )
 
     /** جدول‌های «فقط روی دستگاه» — در سرور هیچ سطری ندارند و ساخته هم نمی‌شوند. */
@@ -69,6 +99,10 @@ object BucketIds {
     const val AVATARS = "avatars"
     const val FATHER_ALBUM = "father-album"
     const val ZAHRA_PRIVATE = "zahra-private"
+
+    /** تصاویر تولیدیِ حرکات با چهره‌ی کاربر و مرجع‌های نقاشی (فایل توسعه ۰۲). */
+    const val MOVE_IMAGES = "move-images"
+    const val SKETCH_REFERENCES = "sketch-references"
 }
 
 /** شناسه‌ی توابع سرور (Function ID در کنسول Appwrite). */
@@ -96,6 +130,18 @@ object FunctionIds {
 
     /** تأیید/رد خاطره‌ی پدر در آلبوم، با بررسی مالکیت سمت سرور. */
     const val ALBUM_CONSENT = "album-consent"
+
+    /** تولید دستور پخت با نام غذا؛ نتیجه در کالکشن recipes کش می‌شود (فایل توسعه ۰۳). */
+    const val GENERATE_RECIPE = "generate-recipe"
+
+    /** تولید تصویر حرکت با شباهت چهره‌ی کاربر (فایل توسعه ۰۲). */
+    const val GENERATE_MOVE_IMAGE = "generate-move-image"
+
+    /** تولید تصویر مرجع سیاه‌قلم سطح ۴ تا ۱۰ (فایل توسعه ۰۲). */
+    const val GENERATE_SKETCH_REFERENCE = "generate-sketch-reference"
+
+    /** برنامه‌ی مرور روزانه بر اساس برنامه‌ی کلاسی و شیفت چرخشی (فایل توسعه ۰۷). */
+    const val WEEKLY_PLAN_ENGINE = "weekly-plan-engine"
 }
 
 /**

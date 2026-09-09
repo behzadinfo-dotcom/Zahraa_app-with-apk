@@ -88,6 +88,38 @@ class CatalogRepository(
 
     suspend fun lesson(id: String): Lesson? = lessons().firstOrNull { it.id == id }
 
+    /**
+     * پیش‌نیازهای یک درس (فایل توسعه ۰۶)، مرتب‌شده بر اساس `orderIndex`.
+     * جدول کوچک است؛ همه را می‌خوانیم و در حافظه فیلتر می‌کنیم تا کش هم کار کند.
+     */
+    suspend fun prerequisitesFor(lessonId: String): List<LessonPrerequisite> =
+        serverOrCacheOrBuiltIn(
+            table = TableIds.LESSON_PREREQUISITES,
+            cacheKey = CACHE_PREREQS,
+            fromRow = { it.toPrerequisite() },
+            toJson = { it.toJson() },
+            fromJson = { lessonPrerequisiteFromJson(it) },
+            builtIn = emptyList(),
+        ).filter { it.lessonId == lessonId }.sortedBy { it.orderIndex }
+
+    /** فهرست آزمون‌های بازه‌ای (فایل توسعه ۰۷). */
+    suspend fun exams(): List<Exam> = serverOrCacheOrBuiltIn(
+        table = TableIds.EXAMS,
+        cacheKey = CACHE_EXAMS,
+        fromRow = { it.toExam() },
+        toJson = { it.toJson() },
+        fromJson = { examFromJson(it) },
+        builtIn = emptyList(),
+    )
+
+    suspend fun exam(id: String): Exam? = exams().firstOrNull { it.id == id }
+
+    /** سؤال‌های یک آزمون را از بانک سؤال (`quizzes`) با ترتیب questionIds برمی‌گرداند. */
+    suspend fun questionsForExam(exam: Exam): List<QuizQuestion> {
+        val bank = quizFor(null).associateBy { it.id }
+        return exam.questionIds.mapNotNull { bank[it] }
+    }
+
     suspend fun quizFor(lessonId: String?): List<QuizQuestion> =
         serverOrCacheOrBuiltIn(
             table = TableIds.QUIZZES,
@@ -199,6 +231,8 @@ class CatalogRepository(
         private const val CACHE_NODES = "catalog_nodes"
         private const val CACHE_ART = "catalog_art"
         private const val CACHE_EXERCISES = "catalog_exercises"
+        private const val CACHE_PREREQS = "catalog_prereqs"
+        private const val CACHE_EXAMS = "catalog_exams"
     }
 }
 
@@ -299,6 +333,35 @@ private fun TableRow.toArtPrompt(): ArtPrompt = ArtPrompt(
     moodTag = string("moodTag"),
 )
 
+private fun TableRow.toExam(): Exam? {
+    val bookCode = string("bookCode")
+    val questionIds = stringList(string("questionIds"))
+    if (bookCode.isBlank() || questionIds.isEmpty()) return null
+    return Exam(
+        id = id,
+        bookCode = bookCode,
+        rangeGroup = string("rangeGroup"),
+        titleFa = string("titleFa").ifBlank { "آزمون بازه‌ای" },
+        questionIds = questionIds,
+        dueAtIso = string("dueAtIso"),
+    )
+}
+
+private fun TableRow.toPrerequisite(): LessonPrerequisite? {
+    val lessonId = string("lessonId")
+    val titleFa = string("titleFa")
+    if (lessonId.isBlank() || titleFa.isBlank()) return null
+    return LessonPrerequisite(
+        id = id,
+        lessonId = lessonId,
+        type = string("type", "concept"),
+        titleFa = titleFa,
+        contentFa = string("contentFa"),
+        flashcardSetId = string("flashcardSetId"),
+        orderIndex = long("orderIndex").toInt(),
+    )
+}
+
 // --- (de)serialization کش محلی -------------------------------------------
 
 private fun Recipe.toJson(): JSONObject = JSONObject()
@@ -358,6 +421,40 @@ private fun learningNodeFromJson(o: JSONObject): LearningNode? = runCatching {
 
 private fun ArtPrompt.toJson(): JSONObject = JSONObject()
     .put("id", id).put("title", title).put("prompt", prompt).put("moodTag", moodTag)
+
+private fun Exam.toJson(): JSONObject = JSONObject()
+    .put("id", id).put("bookCode", bookCode).put("rangeGroup", rangeGroup)
+    .put("titleFa", titleFa).put("questionIds", JSONArray(questionIds)).put("dueAtIso", dueAtIso)
+
+private fun examFromJson(o: JSONObject): Exam? = runCatching {
+    val questionIds = o.optJSONArray("questionIds")?.let { a -> buildList { for (i in 0 until a.length()) add(a.optString(i)) } } ?: emptyList()
+    if (questionIds.isEmpty()) return@runCatching null
+    Exam(
+        id = o.getString("id"),
+        bookCode = o.optString("bookCode"),
+        rangeGroup = o.optString("rangeGroup"),
+        titleFa = o.optString("titleFa", "آزمون بازه‌ای"),
+        questionIds = questionIds,
+        dueAtIso = o.optString("dueAtIso"),
+    )
+}.getOrNull()
+
+private fun LessonPrerequisite.toJson(): JSONObject = JSONObject()
+    .put("id", id).put("lessonId", lessonId).put("type", type)
+    .put("titleFa", titleFa).put("contentFa", contentFa)
+    .put("flashcardSetId", flashcardSetId).put("orderIndex", orderIndex)
+
+private fun lessonPrerequisiteFromJson(o: JSONObject): LessonPrerequisite? = runCatching {
+    LessonPrerequisite(
+        id = o.getString("id"),
+        lessonId = o.getString("lessonId"),
+        type = o.optString("type", "concept"),
+        titleFa = o.getString("titleFa"),
+        contentFa = o.optString("contentFa"),
+        flashcardSetId = o.optString("flashcardSetId"),
+        orderIndex = o.optInt("orderIndex"),
+    )
+}.getOrNull()
 
 private fun artPromptFromJson(o: JSONObject): ArtPrompt? = runCatching {
     ArtPrompt(o.getString("id"), o.getString("title"), o.optString("prompt"), o.optString("moodTag"))

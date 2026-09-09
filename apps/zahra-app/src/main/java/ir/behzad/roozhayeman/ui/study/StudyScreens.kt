@@ -39,6 +39,7 @@ fun StudyHomeScreen(nav: NavController) {
         Text("درس", style = MaterialTheme.typography.titleLarge)
         SectionCard("برنامه مدرسه و شیفت", "چرخه‌ی دوهفته‌ای صبح/عصر.") { nav.navigate(Screen.School.route) }
         SectionCard("آزمون‌ساز", "از روی درس، سؤال ۴گزینه‌ای.") { nav.navigate(Screen.Quiz.of()) }
+        SectionCard("آزمون بازه‌ای و مرور هفتگی", "آزمون هر بازه + برنامه‌ی مرور بر اساس کلاس و شیفت.") { nav.navigate(Screen.ExamCenter.route) }
         SectionCard("مرور غلط‌ها", "فاصله‌دار، بدون تنبیه.") { nav.navigate(Screen.QuizReview.route) }
         SectionCard("کتابخانه", "ژانر را خودت انتخاب می‌کنی.") { nav.navigate(Screen.Library.route) }
         SectionCard("کتاب صوتی", "پخش، بوکمارک، تایمر خواب.") { nav.navigate(Screen.Audiobook.route) }

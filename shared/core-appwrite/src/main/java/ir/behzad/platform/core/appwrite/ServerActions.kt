@@ -125,6 +125,60 @@ class ServerActions(private val functions: FunctionsService) {
             put("itemId", itemId)
         }) { o -> o.optBoolean("ok") && o.optBoolean("approved") == approve }
 
+    // --- generate-recipe (فایل توسعه ۰۳) ------------------------------------
+
+    /** تولید دستور پخت با نام غذا؛ سرور کش می‌کند. */
+    suspend fun generateRecipe(name: String, servings: Int = 2): AppResult<GeneratedRecipe> =
+        call(FunctionIds.GENERATE_RECIPE, JSONObject().put("name", name).put("servings", servings)) { o ->
+            if (!o.optBoolean("ok")) error(o.optString("error").ifBlank { "failed" })
+            val r = o.optJSONObject("recipe") ?: JSONObject()
+            GeneratedRecipe(
+                id = r.optString("id"),
+                title = r.optString("title", name),
+                servings = r.optInt("servings", servings),
+                ingredients = jsonStrings(r.optJSONArray("ingredients")) { it.optString("name") + (it.optString("amount").ifBlank { "" }.let { a -> if (a.isBlank()) "" else " ($a)" }) },
+                steps = jsonStrings(r.optJSONArray("steps")) { it.optString("text") },
+                cached = o.optBoolean("cached"),
+            )
+        }
+
+    // --- generate-move-image (فایل توسعه ۰۲) --------------------------------
+
+    /** تولید تصویر حرکت با شباهت چهره‌ی کاربر؛ فقط با درخواست صریح. */
+    suspend fun generateMoveImage(moveId: String, moveTitle: String, avatarFileId: String, regenerate: Boolean = false): AppResult<GeneratedImage> =
+        call(FunctionIds.GENERATE_MOVE_IMAGE, JSONObject()
+            .put("moveId", moveId).put("moveTitle", moveTitle)
+            .put("avatarFileId", avatarFileId).put("regenerate", regenerate)) { o ->
+            if (!o.optBoolean("ok")) error(o.optString("error").ifBlank { "failed" })
+            GeneratedImage(url = o.optString("imageUrl"), cached = o.optBoolean("cached"))
+        }
+
+    // --- generate-sketch-reference (فایل توسعه ۰۲ بخش ۵) --------------------
+
+    /** تولید تصویر مرجع سیاه‌قلم سطح ۴ تا ۱۰. */
+    suspend fun generateSketchReference(subject: String, level: Int): AppResult<GeneratedImage> =
+        call(FunctionIds.GENERATE_SKETCH_REFERENCE, JSONObject().put("subject", subject).put("level", level)) { o ->
+            if (!o.optBoolean("ok")) error(o.optString("error").ifBlank { "failed" })
+            GeneratedImage(url = o.optString("imageUrl"), refId = o.optString("refId"), cached = false)
+        }
+
+    // --- weekly-plan-engine (فایل توسعه ۰۷) ---------------------------------
+
+    /** برنامه‌ی مرور روزانه بر اساس برنامه‌ی کلاسی و شیفت چرخشی. */
+    suspend fun weeklyPlan(cycleWeekIndex: Int? = null): AppResult<List<ReviewTask>> =
+        call(FunctionIds.WEEKLY_PLAN_ENGINE, JSONObject().apply {
+            if (cycleWeekIndex != null) put("cycleWeekIndex", cycleWeekIndex)
+        }) { o ->
+            if (!o.optBoolean("ok")) error(o.optString("error").ifBlank { "failed" })
+            val arr = o.optJSONArray("reviewTasks")
+            buildList {
+                if (arr != null) for (i in 0 until arr.length()) {
+                    val t = arr.optJSONObject(i) ?: continue
+                    add(ReviewTask(t.optString("bookCode"), t.optString("type"), t.optString("refId"), t.optBoolean("isDone")))
+                }
+            }
+        }
+
     // --- زیرساخت ------------------------------------------------------------
 
     private suspend fun <T> call(
@@ -196,3 +250,31 @@ data class CatalogDigest(val digest: String, val counts: Map<String, Int>) {
 
 /** نتیجه‌ی خلاصه‌ی روزانه. */
 data class DailyCheckin(val ok: Boolean, val dayIso: String, val note: String, val reason: String?)
+
+/** دستور پختِ تولیدشده (فایل توسعه ۰۳). */
+data class GeneratedRecipe(
+    val id: String,
+    val title: String,
+    val servings: Int,
+    val ingredients: List<String>,
+    val steps: List<String>,
+    val cached: Boolean,
+)
+
+/** تصویرِ تولیدشده (حرکت با چهره‌ی کاربر یا مرجع نقاشی — فایل توسعه ۰۲). */
+data class GeneratedImage(val url: String, val refId: String = "", val cached: Boolean = false)
+
+/** یک تسک مرور در برنامه‌ی هفتگی (فایل توسعه ۰۷). */
+data class ReviewTask(val bookCode: String, val type: String, val refId: String, val isDone: Boolean)
+
+/** کمکی: تبدیل آرایه‌ی JSON آبجکت‌ها به فهرست رشته با یک استخراج‌گر. */
+private fun jsonStrings(arr: org.json.JSONArray?, extract: (JSONObject) -> String): List<String> {
+    if (arr == null) return emptyList()
+    return buildList {
+        for (i in 0 until arr.length()) {
+            val o = arr.optJSONObject(i)
+            val s = if (o != null) extract(o) else arr.optString(i)
+            if (s.isNotBlank()) add(s)
+        }
+    }
+}

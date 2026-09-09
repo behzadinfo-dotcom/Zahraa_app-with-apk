@@ -1,6 +1,8 @@
 package ir.behzad.platform.core.appwrite
 
+import androidx.activity.ComponentActivity
 import io.appwrite.ID
+import io.appwrite.enums.OAuthProvider
 import io.appwrite.services.Account
 import ir.behzad.platform.core.common.AppError
 import ir.behzad.platform.core.common.AppResult
@@ -30,6 +32,17 @@ interface AuthService {
     suspend fun signUp(name: String, email: String, password: String): AppResult<AuthUser>
     suspend fun signIn(email: String, password: String): AppResult<AuthUser>
     suspend fun signInAsGuest(): AppResult<AuthUser>
+
+    /**
+     * ورود با گوگل (OAuth2). فایل توسعه ۰۴ بخش ۱.
+     *
+     * SDK اندروید Appwrite خودش مرورگر/CustomTab را باز و بعد از callback،
+     * session را روی همین client ست می‌کند (تابع `suspend` تا پایان callback بلاک است).
+     * بلافاصله بعد از بازگشت، هویت را دوباره از سرور می‌خوانیم تا هیچ‌وقت در حالت
+     * loading گیر نکند.
+     */
+    suspend fun signInWithGoogle(activity: ComponentActivity): AppResult<AuthUser>
+
     suspend fun logout(): AppResult<Unit>
 }
 
@@ -108,6 +121,29 @@ class AppwriteAuthService(
             bootstrap()
             requireUser()
         }.getOrElse { AppResult.Err(AppwriteErrors.map(it, "ورود مهمان ناموفق بود.")) }
+    }
+
+    override suspend fun signInWithGoogle(activity: ComponentActivity): AppResult<AuthUser> {
+        if (!provider.isConfigured) return AppResult.Ok(localUser)
+        return runCatching {
+            // createOAuth2Session تا پایانِ فرایند (callback مرورگر) بلاک می‌ماند و
+            // session را روی client ست می‌کند. اگر کاربر لغو کند، استثنا می‌دهد و
+            // پایین به Err نگاشت می‌شود (نه گیرکردن در loading).
+            account.createOAuth2Session(
+                activity = activity,
+                provider = OAuthProvider.GOOGLE,
+                scopes = listOf("email", "profile"),
+            )
+            // مطابق فایل ۰۴ بخش ۱ (بند ۴): بعد از بازگشت، session را با account.get()
+            // دوباره از سرور بخوان و در core-common کش کن تا کل اپ آن را ببیند.
+            bootstrap()
+            val user = currentUser()
+            if (user == null) {
+                AppResult.Err(AppError.Auth("ورود با گوگل کامل نشد؛ دوباره امتحان کن."))
+            } else {
+                AppResult.Ok(user)
+            }
+        }.getOrElse { AppResult.Err(AppwriteErrors.map(it, "ورود با گوگل ناموفق بود.")) }
     }
 
     override suspend fun logout(): AppResult<Unit> {

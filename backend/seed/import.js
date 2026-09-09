@@ -116,6 +116,63 @@ const TABLES = {
       },
     })),
   },
+  // --- ماژول‌های توسعه (پرامپت‌های ۰۲/۰۶/۰۷) ---
+  wellnessMoves: {
+    table: 'wellness_moves',
+    rows: (items) => items.map((m) => ({
+      id: m.id,
+      data: {
+        category: String(m.category || ''),
+        titleFa: String(m.titleFa || ''),
+        level: Number(m.level || 1),
+        durationSec: Number(m.durationSec || 0),
+        reps: Number(m.reps || 0),
+        instructionsFa: String(m.instructionsFa || ''),
+        audioCueId: String(m.audioCueId || ''),
+        referenceImagePromptTemplate: String(m.referenceImagePromptTemplate || ''),
+        defaultImageUrl: String(m.defaultImageUrl || ''),
+        orderIndex: Number(m.orderIndex || 0),
+      },
+    })),
+  },
+  lessonPrerequisites: {
+    table: 'lesson_prerequisites',
+    rows: (items) => items.map((p) => ({
+      id: p.id,
+      data: {
+        lessonId: String(p.lessonId || ''),
+        type: String(p.type || 'concept'),
+        titleFa: String(p.titleFa || ''),
+        contentFa: String(p.contentFa || ''),
+        flashcardSetId: String(p.flashcardSetId || ''),
+        orderIndex: Number(p.orderIndex || 0),
+      },
+    })),
+  },
+  exams: {
+    table: 'exams',
+    rows: (items) => items.map((e) => ({
+      id: e.id,
+      data: {
+        bookCode: String(e.bookCode || ''),
+        rangeGroup: String(e.rangeGroup || ''),
+        titleFa: String(e.titleFa || ''),
+        questionIds: asJson(e.questionIds),
+        dueAtIso: String(e.dueAtIso || ''),
+      },
+    })),
+  },
+  weeklySchedule: {
+    table: 'weekly_schedule',
+    rows: (items) => items.map((s) => ({
+      id: s.id,
+      data: {
+        cycleWeekIndex: Number(s.cycleWeekIndex || 0),
+        dayOfWeek: String(s.dayOfWeek || ''),
+        classSlots: asJson(s.classSlots),
+      },
+    })),
+  },
 };
 
 function tablesService(client) {

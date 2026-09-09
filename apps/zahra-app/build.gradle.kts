@@ -92,6 +92,9 @@ dependencies {
     implementation(project(":feature-hearttoheart"))
     implementation(project(":feature-calls"))
     implementation(project(":feature-playback"))
+    // پلیر ویدیوی درس (PlayerView داخل Compose) — فایل توسعه ۰۱.
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
     debugImplementation(libs.androidx.compose.ui.tooling)
     testImplementation(libs.junit)
     implementation(project(":core-sync"))
