@@ -15,7 +15,7 @@ import ir.behzad.roozhayeman.ui.exercise.WellnessMove.Category
 object WellnessCatalog {
 
     private const val IMG_BASE = "https://fra.cloud.appwrite.io/v1/storage/buckets/wellness-media/files/"
-    private const val IMG_VIEW = "/view?project=REPLACE_WITH_YOUR_PROJECT_ID"
+    private const val IMG_VIEW = "/view?project=6a9d59e3002751cc3ea8"
 
     private fun imageUrl(filename: String): String = "$IMG_BASE$filename$IMG_VIEW"
 

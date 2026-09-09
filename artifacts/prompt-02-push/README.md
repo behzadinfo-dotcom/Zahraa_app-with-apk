@@ -37,37 +37,39 @@ artifacts/prompt-02-push/
 ### ۱. ساخت جداول و باکت
 ```bash
 cd /home/user/Zahraa_app-with-apk
-node backend/seed/migrate-prompt-02.js
+APPWRITE_PROJECT_ID=... APPWRITE_API_KEY=... node backend/seed/migrate-prompt-02.js
 ```
 
 ### ۲. آپلود فایل‌ها به باکت wellness-media
 ```bash
-# استفاده از Appwrite CLI
-appwrite storage createFile \
-  --bucketId wellness-media \
-  --fileId "yoga/01-balasana-child-pose.jpg" \
-  --file ./artifacts/prompt-02-push/wellness-references/yoga/01-balasana-child-pose.jpg
-
-# یا با اسکریپت Node (نمونه در backend/seed/upload-assets.js)
+# ۴۶ تصویر + ۷۵ فایل صوتی
+APPWRITE_PROJECT_ID=... APPWRITE_API_KEY=... node backend/seed/upload-wellness-assets.js
 ```
 
-### ۳. ساخت URL عمومی
+### ۳. بارگذاری ۴۳ حرکت به جدول wellness_moves
+```bash
+APPWRITE_PROJECT_ID=... APPWRITE_API_KEY=... node backend/seed/seed-wellness-moves.js
+```
+
+### ۴. URL عمومی
 پس از آپلود، URL باکت عمومی:
 ```
-https://fra.cloud.appwrite.io/v1/storage/buckets/wellness-media/files/{fileId}/view?project=YOUR_PROJECT_ID
+https://fra.cloud.appwrite.io/v1/storage/buckets/wellness-media/files/{fileId}/view?project=6a9d59e3002751cc3ea8
 ```
 
-سپس در `WellnessCatalog.kt` ثابت `IMG_VIEW` را به‌روزرسانی کنید:
+که در `WellnessCatalog.kt` به‌صورت `IMG_VIEW` تنظیم شده است:
 ```kotlin
-private const val IMG_VIEW = "/view?project=YOUR_PROJECT_ID"
+private const val IMG_VIEW = "/view?project=6a9d59e3002751cc3ea8"
 ```
 
 ## کدبیس مرتبط
 
-- `apps/zahra-app/.../ui/wellness/` — ۸ فایل Compose
+- `apps/zahra-app/.../ui/wellness/` — ۸ فایل Compose + ۲ unit test
 - `backend/appwrite.json` — schema با ۲۳ جدول، ۵ باکت، ۱۰ function
 - `backend/functions/generate-sketch-reference/` — function تولید مرجع سیاه‌قلم
 - `backend/seed/migrate-prompt-02.js` — migration script
+- `backend/seed/upload-wellness-assets.js` — آپلود تصاویر + صوت
+- `backend/seed/seed-wellness-moves.js` — بارگذاری ۴۳ حرکت
 - `shared/core-common/.../TableIds.kt` — شناسه‌ی جداول
 
 ## یادداشت
@@ -75,3 +77,4 @@ private const val IMG_VIEW = "/view?project=YOUR_PROJECT_ID"
 - پوشه‌ی `artifacts/wellness-references/` (نه این پوشه) در `.gitignore` است
 - این پوشه‌ی `prompt-02-push/` شامل همه چیز برای deploy است
 - پس از آپلود به Appwrite، فایل‌های صوتی و تصاویر در app از URL عمومی قابل دسترسی می‌شوند
+- فرمت audioCueId: برای یوگا `start|mid|end` (pipe-separated)؛ برای سایر دسته‌ها تک فایل

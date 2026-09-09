@@ -21,7 +21,9 @@ import java.security.MessageDigest
 object AudioCueCache {
 
     private const val CACHE_SUBDIR = "audio_cues"
+    private const val PROJECT_ID = "6a9d59e3002751cc3ea8"
     private const val STORAGE_BASE = "https://fra.cloud.appwrite.io/v1/storage/buckets/wellness-media/files/"
+    private const val FILE_VIEW_SUFFIX = "/view?project=$PROJECT_ID"
 
     /**
      * برگرداندن فایل محلی برای پخش.
@@ -31,7 +33,7 @@ object AudioCueCache {
         val cacheFile = cacheFile(context, key)
         if (cacheFile.exists() && cacheFile.length() > 0) return cacheFile
         // تلاش برای دانلود
-        val url = if (key.startsWith("http")) key else "$STORAGE_BASE$key"
+        val url = if (key.startsWith("http")) key else "$STORAGE_BASE$key$FILE_VIEW_SUFFIX"
         val downloaded = runCatching { downloadTo(url, cacheFile) }.getOrDefault(false)
         return if (downloaded) cacheFile else null
     }
@@ -43,7 +45,7 @@ object AudioCueCache {
     fun prefetch(context: Context, key: String): Boolean {
         val cacheFile = cacheFile(context, key)
         if (cacheFile.exists() && cacheFile.length() > 0) return true
-        val url = if (key.startsWith("http")) key else "$STORAGE_BASE$key"
+        val url = if (key.startsWith("http")) key else "$STORAGE_BASE$key$FILE_VIEW_SUFFIX"
         return runCatching { downloadTo(url, cacheFile) }.getOrDefault(false)
     }
 

@@ -20,13 +20,29 @@ if (!PROJECT_ID || !API_KEY) {
 
 const dryRun = process.argv.includes('--dry-run');
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
-const tables = new sdk.TablesDB(client);
+const tablesDb = new sdk.TablesDB(client);
 const storage = new sdk.Storage(client);
+
+// نگاشت type فیلد به متد مناسب در TablesDB v18+
+function createColumnFn(type) {
+    const map = {
+        'string': 'createStringColumn',
+        'integer': 'createIntegerColumn',
+        'boolean': 'createBooleanColumn',
+        'float': 'createFloatColumn',
+        'datetime': 'createDatetimeColumn',
+        'email': 'createEmailColumn',
+        'url': 'createUrlColumn',
+        'ip': 'createIpColumn',
+        'enum': 'createEnumColumn',
+    };
+    return map[type] || null;
+}
 
 async function tryCreateTable(tableId, name, perms, rowSecurity) {
     try {
         if (dryRun) return console.log(`  [dry] createTable ${tableId}`);
-        await tables.createTable({
+        await tablesDb.createTable({
             databaseId: DATABASE_ID,
             tableId,
             name,
@@ -35,30 +51,39 @@ async function tryCreateTable(tableId, name, perms, rowSecurity) {
         });
         console.log(`  ✅ table ${tableId}`);
     } catch (e) {
-        if (String(e.message || e).includes('already exists')) {
+        const msg = String(e.message || e);
+        if (msg.includes('already exists') || msg.includes('duplicate') || msg.includes('409')) {
             console.log(`  · table ${tableId} (exists)`);
         } else {
-            console.log(`  ⚠️ table ${tableId}: ${e.message || e}`);
+            console.log(`  ⚠️ table ${tableId}: ${msg}`);
         }
     }
 }
 
 async function tryCreateColumn(tableId, col) {
+    const method = createColumnFn(col.type);
+    if (!method) {
+        console.log(`  ⚠️ ${tableId}.${col.key}: type ${col.type} ناشناخته`);
+        return;
+    }
+    const args = {
+        databaseId: DATABASE_ID,
+        tableId,
+        key: col.key,
+        size: col.size,
+        required: !!col.required,
+    };
+    // فقط برای ستون‌هایی که default دارند، default بفرست
+    if (col.default !== undefined && col.default !== null) {
+        args.default = col.default;
+    }
     try {
-        if (dryRun) return console.log(`  [dry] createColumn ${tableId}.${col.key}`);
-        await tables.createColumn({
-            databaseId: DATABASE_ID,
-            tableId,
-            key: col.key,
-            type: col.type,
-            size: col.size,
-            required: !!col.required,
-            default: col.default,
-        });
+        if (dryRun) return console.log(`  [dry] ${method} ${tableId}.${col.key}`);
+        await tablesDb[method](args);
         console.log(`  ✅ ${tableId}.${col.key}`);
     } catch (e) {
         const msg = String(e.message || e);
-        if (msg.includes('already exists') || msg.includes('duplicate')) {
+        if (msg.includes('already exists') || msg.includes('duplicate') || msg.includes('409')) {
             console.log(`  · ${tableId}.${col.key} (exists)`);
         } else {
             console.log(`  ⚠️ ${tableId}.${col.key}: ${msg}`);
@@ -69,7 +94,7 @@ async function tryCreateColumn(tableId, col) {
 async function tryCreateIndex(tableId, idx) {
     try {
         if (dryRun) return console.log(`  [dry] createIndex ${tableId}.${idx.key}`);
-        await tables.createIndex({
+        await tablesDb.createIndex({
             databaseId: DATABASE_ID,
             tableId,
             key: idx.key,
@@ -79,7 +104,7 @@ async function tryCreateIndex(tableId, idx) {
         console.log(`  ✅ index ${tableId}.${idx.key}`);
     } catch (e) {
         const msg = String(e.message || e);
-        if (msg.includes('already exists') || msg.includes('duplicate')) {
+        if (msg.includes('already exists') || msg.includes('duplicate') || msg.includes('409')) {
             console.log(`  · index ${tableId}.${idx.key} (exists)`);
         } else {
             console.log(`  ⚠️ index ${tableId}.${idx.key}: ${msg}`);
@@ -99,10 +124,11 @@ async function tryCreateBucket(id, name, maxSize, perms) {
         });
         console.log(`  ✅ bucket ${id}`);
     } catch (e) {
-        if (String(e.message || e).includes('already exists')) {
+        const msg = String(e.message || e);
+        if (msg.includes('already exists') || msg.includes('duplicate') || msg.includes('409')) {
             console.log(`  · bucket ${id} (exists)`);
         } else {
-            console.log(`  ⚠️ bucket ${id}: ${e.message || e}`);
+            console.log(`  ⚠️ bucket ${id}: ${msg}`);
         }
     }
 }
