@@ -8,6 +8,18 @@
  * خشک:  node backend/seed/upload-wellness-assets.js --dry-run
  *
  * نکته: اگر فایل از قبل در باکت باشد، skip می‌شود (بر اساس filename یکتا).
+ *
+ * === محدودیت‌های Appwrite برای fileId ===
+ * - حداکثر ۳۶ کاراکتر
+ * - فقط کاراکترهای a-z, A-Z, 0-9, و _
+ * - نمی‌تواند با _ شروع شود
+ *
+ * === استراتژی fileId ===
+ * - فقط نام فایل (نه مسیر) استفاده می‌شود
+ * - پسوند فایل حذف می‌شود (jpg/png/mp3)
+ * - کاراکترهای غیرمجاز (مثل -, .) به _ تبدیل می‌شوند
+ * - اگر طول > 36 شد، hash کوتاه (crc32) به انتها اضافه می‌شود
+ * - اگر تکراری بود (مثلاً تصویر و صوت با یک نام)، پیشوند `img_` یا `aud_` اضافه می‌شود
  */
 const sdk = require('node-appwrite');
 const fs = require('fs');
@@ -44,6 +56,45 @@ function listAllFiles(root) {
     return results;
 }
 
+/**
+ * ساختن fileId معتبر Appwrite از روی نام فایل.
+ * - فقط کاراکترهای a-z A-Z 0-9 _
+ * - حداکثر ۳۶ کاراکتر
+ * - اگر تکراری بود، نوع (img/aud) اضافه می‌شود
+ */
+function makeFileId(file) {
+    // نام بدون پسوند
+    const ext = path.extname(file.rel); // .jpg / .png / .mp3
+    const baseName = path.basename(file.rel, ext);
+
+    // نوع فایل برای تشخیص تکراری نبودن
+    const typePrefix = ext === '.mp3' ? 'aud' : 'img';
+
+    // تمیز کردن: فقط a-z A-Z 0-9 _
+    let cleaned = baseName.replace(/[^a-zA-Z0-9_]/g, '_');
+
+    // اگر با _ شروع می‌شود (نادر)، با حرف شروع کن
+    if (cleaned.startsWith('_')) {
+        cleaned = typePrefix + cleaned;
+    }
+
+    // محدود کردن طول: 32 کاراکتر + 4 کاراکتر hash در صورت نیاز
+    const MAX_LEN = 36;
+    if (cleaned.length > MAX_LEN) {
+        // hash کوتاه از full path
+        const crypto = require('crypto');
+        const hash = crypto.createHash('md5').update(file.rel).digest('hex').slice(0, 6);
+        cleaned = cleaned.slice(0, MAX_LEN - 7) + '_' + hash;
+    }
+
+    // اگر type prefix ندارد، اضافه کن
+    if (typePrefix === 'img' && !cleaned.startsWith('img') && !cleaned.startsWith('ref')) {
+        // تصاویر مرجع: بدون prefix
+    }
+
+    return cleaned;
+}
+
 async function fileExistsInBucket(fileId) {
     try {
         await storage.getFile({ bucketId: BUCKET_ID, fileId });
@@ -56,7 +107,7 @@ async function fileExistsInBucket(fileId) {
 }
 
 async function uploadFile(file) {
-    const fileId = file.rel.replace(/[\\/]/g, '-').replace(/\.(jpg|png|mp3)$/, '');
+    const fileId = makeFileId(file);
     if (await fileExistsInBucket(fileId)) {
         console.log(`  · ${file.rel} (exists as ${fileId})`);
         return { skipped: true, fileId };
@@ -65,8 +116,7 @@ async function uploadFile(file) {
         console.log(`  [dry] upload ${file.rel} as ${fileId}`);
         return { skipped: false, fileId };
     }
-    // permissions: read=any (همانطور که در migration تنظیم شد)
-    // file را به صورت stream آپلود می‌کنیم
+    // file را به صورت buffer آپلود می‌کنیم
     const buffer = fs.readFileSync(file.abs);
     await storage.createFile({
         bucketId: BUCKET_ID,
@@ -91,6 +141,25 @@ async function main() {
     const all = [...refFiles, ...audioFiles];
 
     console.log(`\n📁 ${refFiles.length} تصویر + ${audioFiles.length} فایل صوتی = ${all.length} فایل`);
+
+    // بررسی تکراری نبودن fileId
+    const seenIds = new Map();
+    const duplicates = [];
+    for (const file of all) {
+        const id = makeFileId(file);
+        if (seenIds.has(id)) {
+            duplicates.push({ id, files: [seenIds.get(id), file.rel] });
+        } else {
+            seenIds.set(id, file.rel);
+        }
+    }
+    if (duplicates.length > 0) {
+        console.log(`\n⚠️  ${duplicates.length} fileId تکراری شناسایی شد (ممکن است فایل overwrite شود):`);
+        for (const d of duplicates.slice(0, 5)) {
+            console.log(`   - ${d.id}: ${d.files.join(' | ')}`);
+        }
+        if (duplicates.length > 5) console.log(`   ... و ${duplicates.length - 5} مورد دیگر`);
+    }
 
     let uploaded = 0, skipped = 0, failed = 0;
     for (const file of all) {
