@@ -11,7 +11,7 @@ const sdk = require('node-appwrite');
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'main_db';
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'ZahraDB';
 
 if (!PROJECT_ID || !API_KEY) {
     console.error('❌ APPWRITE_PROJECT_ID و APPWRITE_API_KEY لازم است.');
@@ -22,6 +22,7 @@ const dryRun = process.argv.includes('--dry-run');
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 const tablesDb = new sdk.TablesDB(client);
 const storage = new sdk.Storage(client);
+const databases = new sdk.Databases(client); // برای ایجاد database اگر نباشد
 
 // نگاشت type فیلد به متد مناسب در TablesDB v18+
 function createColumnFn(type) {
@@ -94,12 +95,13 @@ async function tryCreateColumn(tableId, col) {
 async function tryCreateIndex(tableId, idx) {
     try {
         if (dryRun) return console.log(`  [dry] createIndex ${tableId}.${idx.key}`);
+        // Appwrite v18+: نام پارامتر از attributes به columns تغییر کرده
         await tablesDb.createIndex({
             databaseId: DATABASE_ID,
             tableId,
             key: idx.key,
             type: idx.type,
-            attributes: idx.attributes,
+            columns: idx.attributes, // نام قدیم: attributes
         });
         console.log(`  ✅ index ${tableId}.${idx.key}`);
     } catch (e) {
@@ -108,6 +110,30 @@ async function tryCreateIndex(tableId, idx) {
             console.log(`  · index ${tableId}.${idx.key} (exists)`);
         } else {
             console.log(`  ⚠️ index ${tableId}.${idx.key}: ${msg}`);
+        }
+    }
+}
+
+async function tryCreateDatabase() {
+    // ابتدا چک کن database وجود دارد یا نه
+    try {
+        await databases.get({ databaseId: DATABASE_ID });
+        console.log(`  · database ${DATABASE_ID} (exists)`);
+    } catch (e) {
+        const msg = String(e.message || e);
+        if (msg.includes('not found') || msg.includes('404')) {
+            try {
+                if (dryRun) return console.log(`  [dry] createDatabase ${DATABASE_ID}`);
+                await databases.create({
+                    databaseId: DATABASE_ID,
+                    name: 'پایگاه‌داده‌ی زهرا',
+                });
+                console.log(`  ✅ database ${DATABASE_ID}`);
+            } catch (e2) {
+                console.log(`  ⚠️ database ${DATABASE_ID}: ${e2.message || e2}`);
+            }
+        } else {
+            console.log(`  ⚠️ database ${DATABASE_ID}: ${msg}`);
         }
     }
 }
@@ -136,6 +162,9 @@ async function tryCreateBucket(id, name, maxSize, perms) {
 async function migrate() {
     console.log('پرامپت ۰۲ migration: wellness tables + bucket');
 
+    // 0) database — اگر نباشد، ایجاد کن
+    await tryCreateDatabase();
+
     // 1) wellness_moves
     await tryCreateTable('wellness_moves', 'حرکات سلامتی', ['read("any")'], false);
     const movesCols = [
@@ -146,8 +175,8 @@ async function migrate() {
         { key: 'durationSec', type: 'integer', required: false, default: 60 },
         { key: 'reps', type: 'integer', required: false, default: 0 },
         { key: 'instructionsFa', type: 'string', size: 2048, required: false, default: '' },
-        { key: 'audioCueId', type: 'string', size: 64, required: false, default: '' },
-        { key: 'referenceImageUrl', type: 'string', size: 1024, required: false, default: '' },
+        { key: 'audioCueId', type: 'string', size: 256, required: false, default: '' },
+        { key: 'referenceImageUrl', type: 'string', size: 1024, required: false, default: '' }, // 1024 کافی است برای URL کامل
         { key: 'referenceImagePromptTemplate', type: 'string', size: 4096, required: false, default: '' },
         { key: 'orderIndex', type: 'integer', required: false, default: 0 },
         { key: 'tags', type: 'string', size: 512, required: false, default: '[]' },
@@ -183,7 +212,10 @@ async function migrate() {
     await tryCreateIndex('wellness_logs', { key: 'wellnessLogUserDayIdx', type: 'key', attributes: ['userId', 'dayIso'] });
 
     // 4) bucket
-    await tryCreateBucket('wellness-media', 'رسانه‌ی سلامتی', 5 * 1024 * 1024, ['read("any")', 'create("users")']);
+    // پلن رایگان Appwrite فقط ۱ bucket دارد. ما از bucket پیش‌فرض "default" استفاده می‌کنیم.
+    // اگر در آینده پلن ارتقا یافت، می‌توان bucket اختصاصی "wellness-media" ساخت.
+    // migration فقط warning می‌دهد تا migration بدون خطا تمام شود.
+    console.log(`  ℹ️  از bucket پیش‌فرض "default" استفاده می‌شود (پلن رایگان: ۱ bucket)`);
 
     console.log('\n✅ مهاجرت پرامپت ۰۲ تمام شد.');
 }

@@ -9,7 +9,7 @@ package ir.behzad.platform.core.common
  */
 object TableIds {
     /** نام دیتابیس — از `appwrite.databaseId` در local.properties می‌آید و این مقدار پیش‌فرض است. */
-    const val DATABASE = "main_db"
+    const val DATABASE = "ZahraDB"
 
     // --- هویت و پیوند ---
     const val PROFILES = "profiles"
@@ -78,8 +78,11 @@ object BucketIds {
     const val AVATARS = "avatars"
     const val FATHER_ALBUM = "father-album"
     const val ZAHRA_PRIVATE = "zahra-private"
-    /** پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات و مرجع‌های سیاه‌قلم. */
-    const val WELLNESS_MEDIA = "wellness-media"
+    /**
+     * پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات و مرجع‌های سیاه‌قلم.
+     * Bucket اختصاصی: ID = 6aa1e998002f955507b0
+     */
+    const val WELLNESS_MEDIA = "Zahraa-bckt"
 }
 
 /** شناسه‌ی توابع سرور (Function ID در کنسول Appwrite). */

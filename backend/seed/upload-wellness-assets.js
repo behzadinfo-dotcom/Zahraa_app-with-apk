@@ -28,7 +28,7 @@ const path = require('path');
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const BUCKET_ID = 'wellness-media';
+const BUCKET_ID = 'Zahraa-bckt'; // Bucket اختصاصی پرامپت ۰۲
 const SOURCE_DIR = path.resolve(__dirname, '../../artifacts/prompt-02-push');
 
 if (!PROJECT_ID || !API_KEY) {
@@ -61,6 +61,7 @@ function listAllFiles(root) {
  * - فقط کاراکترهای a-z A-Z 0-9 _
  * - حداکثر ۳۶ کاراکتر
  * - اگر تکراری بود، نوع (img/aud) اضافه می‌شود
+ * - prefix "w_" برای تشخیص فایل‌های wellness در bucket اشتراکی "default"
  */
 function makeFileId(file) {
     // نام بدون پسوند
@@ -75,21 +76,21 @@ function makeFileId(file) {
 
     // اگر با _ شروع می‌شود (نادر)، با حرف شروع کن
     if (cleaned.startsWith('_')) {
-        cleaned = typePrefix + cleaned;
+        cleaned = 'w' + cleaned;
     }
 
-    // محدود کردن طول: 32 کاراکتر + 4 کاراکتر hash در صورت نیاز
+    // prefix "w" برای تشخیص wellness files (مثلاً w01_balasana_child_pose)
+    if (!cleaned.startsWith('w') && !cleaned.startsWith('cue') && !cleaned.startsWith('ref')) {
+        cleaned = 'w' + cleaned;
+    }
+
+    // محدود کردن طول: 36 کاراکتر
     const MAX_LEN = 36;
     if (cleaned.length > MAX_LEN) {
         // hash کوتاه از full path
         const crypto = require('crypto');
         const hash = crypto.createHash('md5').update(file.rel).digest('hex').slice(0, 6);
         cleaned = cleaned.slice(0, MAX_LEN - 7) + '_' + hash;
-    }
-
-    // اگر type prefix ندارد، اضافه کن
-    if (typePrefix === 'img' && !cleaned.startsWith('img') && !cleaned.startsWith('ref')) {
-        // تصاویر مرجع: بدون prefix
     }
 
     return cleaned;

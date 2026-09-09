@@ -14,7 +14,7 @@ const sdk = require('node-appwrite');
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'main_db';
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'ZahraDB';
 const TABLE_ID = 'wellness_moves';
 
 if (!PROJECT_ID || !API_KEY) {
@@ -26,7 +26,7 @@ const dryRun = process.argv.includes('--dry-run');
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 const tablesDb = new sdk.TablesDB(client);
 
-const IMG_BASE = 'https://fra.cloud.appwrite.io/v1/storage/buckets/wellness-media/files/';
+const IMG_BASE = 'https://fra.cloud.appwrite.io/v1/storage/buckets/Zahraa-bckt/files/';
 const IMG_VIEW = '/view?project=' + PROJECT_ID;
 const img = (filename) => `${IMG_BASE}${filename}${IMG_VIEW}`;
 
