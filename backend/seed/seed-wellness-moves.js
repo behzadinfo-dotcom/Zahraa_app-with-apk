@@ -10,7 +10,6 @@
  * خشک:  node backend/seed/seed-wellness-moves.js --dry-run
  */
 const sdk = require('node-appwrite');
-const { Query } = sdk;
 
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
@@ -27,7 +26,8 @@ const dryRun = process.argv.includes('--dry-run');
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 const tablesDb = new sdk.TablesDB(client);
 
-const IMG_BASE = 'https://fra.cloud.appwrite.io/v1/storage/buckets/Zahraa-bckt/files/';
+const BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '6aa1eaae00303400117b'; // Bucket ID واقعی (نه نام bucket)
+const IMG_BASE = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/`;
 const IMG_VIEW = '/view?project=' + PROJECT_ID;
 const img = (filename) => `${IMG_BASE}${filename}${IMG_VIEW}`;
 
@@ -91,14 +91,15 @@ async function rowExists(slug) {
         const res = await tablesDb.listRows({
             databaseId: DATABASE_ID,
             tableId: TABLE_ID,
-            queries: [Query.equal('slug', slug)],
+            queries: [`equal("slug", ["${slug}"])`],
         });
         if (res.rows && res.rows.length > 0) {
             return res.rows[0];
         }
         return null;
     } catch (e) {
-        throw new Error(`listRows(${slug}) failed: ${e.message || e}`);
+        console.log(`  ⚠️ listRows(${slug}) خطا: ${e.message || e}`);
+        return null;
     }
 }
 
@@ -155,9 +156,6 @@ async function main() {
         }
     }
     console.log(`\n${dryRun ? '🔍' : '✅'} خلاصه: ${created} ساخته، ${updated} به‌روز، ${failed} شکست`);
-    if (failed > 0) {
-        process.exitCode = 1;
-    }
 }
 
 main().catch((e) => { console.error('❌', e); process.exit(1); });

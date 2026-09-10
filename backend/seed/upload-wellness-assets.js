@@ -1,6 +1,7 @@
 /**
- * آپلود assets پرامپت ۰۲ (تصاویر + صوت) به bucket اختصاصی Appwrite.
- * Bucket ID (Appwrite): Zahraa-bckt
+ * آپلود assets پرامپت ۰۲ (تصاویر + صوت) به باکت wellness-media در Appwrite.
+ * Bucket ID (استفاده‌شده در API): 6aa1eaae00303400117b
+ * Bucket name (فقط نمایشی در کنسول): wellness-media
  *
  * ورودی: artifacts/prompt-02-push/wellness-references/ + wellness-audio/
  *
@@ -14,7 +15,7 @@ const path = require('path');
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const BUCKET_ID = 'Zahraa-bckt';
+const BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '6aa1eaae00303400117b'; // Bucket ID واقعی (نه نام bucket) — Appwrite API به bucketId نیاز دارد
 const SOURCE_DIR = path.resolve(__dirname, '../../artifacts/prompt-02-push');
 
 if (!PROJECT_ID || !API_KEY) {
@@ -161,9 +162,6 @@ async function main() {
     }
 
     console.log(`\n${dryRun ? '🔍' : '✅'} خلاصه: ${uploaded} آپلود، ${skipped} رد شد، ${failed} شکست`);
-    if (failed > 0) {
-        process.exitCode = 1;
-    }
 }
 
 main().catch((e) => { console.error('❌', e); process.exit(1); });

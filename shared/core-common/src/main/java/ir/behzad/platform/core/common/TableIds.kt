@@ -80,9 +80,9 @@ object BucketIds {
     const val ZAHRA_PRIVATE = "zahra-private"
     /**
      * پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات و مرجع‌های سیاه‌قلم.
-     * Bucket اختصاصی: ID = 6aa1e998002f955507b0
+     * نام bucket در کنسول: wellness-media
      */
-    const val WELLNESS_MEDIA = "Zahraa-bckt"
+    const val WELLNESS_MEDIA = "6aa1eaae00303400117b"
 }
 
 /** شناسه‌ی توابع سرور (Function ID در کنسول Appwrite). */

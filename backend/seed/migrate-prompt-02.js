@@ -12,6 +12,8 @@ const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID || 'ZahraDB';
+const BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '6aa1eaae00303400117b'; // Bucket ID واقعی wellness-media
+const BUCKET_NAME = 'wellness-media';
 
 if (!PROJECT_ID || !API_KEY) {
     console.error('❌ APPWRITE_PROJECT_ID و APPWRITE_API_KEY لازم است.');
@@ -38,7 +40,7 @@ function createColumnFn(type) {
         'enum': 'createEnumColumn',
     };
     return map[type] || null;
-} 
+}
 
 async function tryCreateTable(tableId, name, perms, rowSecurity) {
     try {
@@ -159,6 +161,22 @@ async function tryCreateBucket(id, name, maxSize, perms) {
     }
 }
 
+/** بررسی وجود bucket واقعی wellness-media؛ اگر نبود، با همان ID می‌سازد. */
+async function tryEnsureBucket(id, name) {
+    try {
+        if (dryRun) return console.log(`  [dry] getBucket ${id} (${name})`);
+        await storage.getBucket({ bucketId: id });
+        console.log(`  · bucket ${id} (exists — ${name})`);
+    } catch (e) {
+        const msg = String(e.message || e);
+        if (msg.includes('not found') || msg.includes('404')) {
+            await tryCreateBucket(id, name, 50 * 1024 * 1024, ['read("any")']);
+        } else {
+            console.log(`  ⚠️ bucket ${id}: ${msg}`);
+        }
+    }
+}
+
 async function migrate() {
     console.log('پرامپت ۰۲ migration: wellness tables + bucket');
 
@@ -211,11 +229,8 @@ async function migrate() {
     for (const col of logCols) await tryCreateColumn('wellness_logs', col);
     await tryCreateIndex('wellness_logs', { key: 'wellnessLogUserDayIdx', type: 'key', attributes: ['userId', 'dayIso'] });
 
-    // 4) bucket
-    // پلن رایگان Appwrite فقط ۱ bucket دارد. ما از bucket پیش‌فرض "default" استفاده می‌کنیم.
-    // اگر در آینده پلن ارتقا یافت، می‌توان bucket اختصاصی "wellness-media" ساخت.
-    // migration فقط warning می‌دهد تا migration بدون خطا تمام شود.
-    console.log(`  ℹ️  از bucket پیش‌فرض "default" استفاده می‌شود (پلن رایگان: ۱ bucket)`);
+    // 4) bucket — بررسی/ایجاد bucket واقعی wellness-media (ID: 6aa1eaae00303400117b)
+    await tryEnsureBucket(BUCKET_ID, BUCKET_NAME);
 
     console.log('\n✅ مهاجرت پرامپت ۰۲ تمام شد.');
 }
