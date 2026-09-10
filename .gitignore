@@ -27,3 +27,6 @@ artifacts/wellness-references/learning/*.jpg
 artifacts/wellness-references/learning/*.png
 !artifacts/wellness-references/.gitkeep
 !artifacts/wellness-references/prompts/
+
+# Node dependencies (deploy با npm ci نصب می‌کند)
+node_modules/
