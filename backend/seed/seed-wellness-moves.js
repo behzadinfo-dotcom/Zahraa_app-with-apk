@@ -92,8 +92,12 @@ async function rowExists(slug) {
             tableId: TABLE_ID,
             queries: [`equal("slug", ["${slug}"])`],
         });
-        return res.rows.length > 0 ? res.rows[0] : null;
+        if (res.rows && res.rows.length > 0) {
+            return res.rows[0];
+        }
+        return null;
     } catch (e) {
+        console.log(`  ⚠️ listRows(${slug}) خطا: ${e.message || e}`);
         return null;
     }
 }
@@ -122,13 +126,14 @@ async function upsertMove(move) {
             rowId: existing.$id,
             data,
         });
-        console.log(`  ✅ ${move.slug} (updated)`);
+        console.log(`  ✅ ${move.slug} (updated, $id=${existing.$id})`);
     } else {
         if (dryRun) return console.log(`  [dry] create ${move.slug}`);
+        // استفاده از slug به عنوان rowId برای predictability و جلوگیری از ID تکراری
         await tablesDb.createRow({
             databaseId: DATABASE_ID,
             tableId: TABLE_ID,
-            rowId: sdk.ID.unique(),
+            rowId: move.slug.replace(/[^a-zA-Z0-9_-]/g, '_').slice(0, 36),
             data,
         });
         console.log(`  ✅ ${move.slug} (created)`);
