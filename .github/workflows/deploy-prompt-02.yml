@@ -1,6 +1,6 @@
 name: Deploy Prompt 02 (wellness)
 
-# اجرای دستتی deploy پرامپت ۰۲ (migration + آپلود + seed) روی Appwrite production.
+# اجرای دستی deploy پرامپت ۰۲ (migration + آپلود + seed) روی Appwrite production.
 # - ۳ گام: migrate → upload assets → seed moves
 # - هر گام idempotent است (skip اگر موجود باشد)
 # - می‌توان با workflow_dispatch دستی اجرا کرد
