@@ -60,7 +60,7 @@ jobs:
         working-directory: backend/seed
         run: npm ci
 
-      - name: 🗄 گام ۱/۴ — Migration (database + جداول + بررسی bucket)
+      - name: 🗄 گام ۱/۳ — Migration (ساخت database + جداول + bucket)
         if: github.event.inputs.skip_migration != 'true'
         working-directory: backend/seed
         run: |
@@ -68,15 +68,7 @@ jobs:
           node migrate-prompt-02.js
           echo "✅ Migration تمام شد."
 
-      - name: 🧹 گام ۲/۴ — پاکسازی سطرهای تکراری (قبل از seed)
-        if: github.event.inputs.skip_seed != 'true'
-        working-directory: backend/seed
-        run: |
-          echo "▶ اجرای cleanup-wellness-moves.js ..."
-          node cleanup-wellness-moves.js
-          echo "✅ پاکسازی تمام شد."
-
-      - name: 📤 گام ۳/۴ — آپلود تصاویر + صوت
+      - name: 📤 گام ۲/۳ — آپلود تصاویر + صوت
         if: github.event.inputs.skip_upload != 'true'
         working-directory: backend/seed
         run: |
@@ -90,7 +82,7 @@ jobs:
           echo "▶ اجرای upload-wellness-assets.js ..."
           node upload-wellness-assets.js
 
-      - name: 🌱 گام ۴/۴ — Seed ۴۳ حرکت به wellness_moves
+      - name: 🌱 گام ۳/۳ — Seed ۴۳ حرکت به wellness_moves
         if: github.event.inputs.skip_seed != 'true'
         working-directory: backend/seed
         run: |
