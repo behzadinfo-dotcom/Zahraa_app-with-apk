@@ -9,6 +9,7 @@
  * خشک:  node backend/seed/upload-wellness-assets.js --dry-run
  */
 const sdk = require('node-appwrite');
+const { InputFile } = require('node-appwrite/file');
 const fs = require('fs');
 const path = require('path');
 
@@ -104,12 +105,12 @@ async function uploadFile(file) {
         console.log(`  [dry] upload ${file.rel} as ${fileId}`);
         return { skipped: false, fileId };
     }
-    // file را به صورت buffer آپلود می‌کنیم
-    const buffer = fs.readFileSync(file.abs);
+    // فایل باید به‌صورت InputFile به SDK داده شود، نه Buffer خام —
+    // وگرنه Appwrite با خطای "The requested file could not be found" رد می‌کند.
     await storage.createFile({
         bucketId: BUCKET_ID,
         fileId,
-        file: buffer,
+        file: InputFile.fromPath(file.abs, path.basename(file.abs)),
         // permissions: ['read("any")']  // از permissions باکت به ارث می‌برد
     });
     console.log(`  ✅ ${file.rel} → ${fileId}`);
