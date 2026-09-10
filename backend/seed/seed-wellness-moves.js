@@ -25,6 +25,7 @@ if (!PROJECT_ID || !API_KEY) {
 const dryRun = process.argv.includes('--dry-run');
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 const tablesDb = new sdk.TablesDB(client);
+const { Query } = sdk;
 
 const BUCKET_ID = process.env.APPWRITE_BUCKET_ID || '6aa1eaae00303400117b'; // Bucket ID واقعی (نه نام bucket)
 const IMG_BASE = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/`;
@@ -91,7 +92,7 @@ async function rowExists(slug) {
         const res = await tablesDb.listRows({
             databaseId: DATABASE_ID,
             tableId: TABLE_ID,
-            queries: [`equal("slug", ["${slug}"])`],
+            queries: [Query.equal('slug', slug)],
         });
         if (res.rows && res.rows.length > 0) {
             return res.rows[0];

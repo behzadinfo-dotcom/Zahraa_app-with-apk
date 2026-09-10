@@ -23,6 +23,7 @@ if (!PROJECT_ID || !API_KEY) {
 
 const client = new sdk.Client().setEndpoint(ENDPOINT).setProject(PROJECT_ID).setKey(API_KEY);
 const tablesDb = new sdk.TablesDB(client);
+const { Query } = sdk;
 
 async function main() {
     console.log(`🧹 پاکسازی سطرهای تکراری در ${TABLE_ID}`);
@@ -33,7 +34,7 @@ async function main() {
         const res = await tablesDb.listRows({
             databaseId: DATABASE_ID,
             tableId: TABLE_ID,
-            queries: [`limit(${LIMIT})`, `offset(${offset})`],
+            queries: [Query.limit(LIMIT), Query.offset(offset)],
         });
         allRows = allRows.concat(res.rows);
         if (res.rows.length < LIMIT) break;
