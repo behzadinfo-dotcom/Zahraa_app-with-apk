@@ -89,8 +89,13 @@ async function fileExistsInBucket(fileId) {
         await storage.getFile({ bucketId: BUCKET_ID, fileId });
         return true;
     } catch (e) {
+        // با کد HTTP چک می‌کنیم، نه با متن پیام —
+        // پیام واقعی Appwrite «The requested file could not be found.» است
+        // که شامل زیررشته‌ی «not found» نیست («could not be found» است)
+        // و همین باعث می‌شد این تابع همیشه throw کند و createFile اصلاً اجرا نشود.
+        if (e.code === 404) return false;
         const msg = String(e.message || e);
-        if (msg.includes('not found') || msg.includes('404')) return false;
+        if (msg.includes('could not be found') || msg.includes('404')) return false;
         throw e;
     }
 }

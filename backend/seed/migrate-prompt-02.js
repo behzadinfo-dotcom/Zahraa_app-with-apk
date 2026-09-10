@@ -122,8 +122,7 @@ async function tryCreateDatabase() {
         await databases.get({ databaseId: DATABASE_ID });
         console.log(`  · database ${DATABASE_ID} (exists)`);
     } catch (e) {
-        const msg = String(e.message || e);
-        if (msg.includes('not found') || msg.includes('404')) {
+        if (e.code === 404) {
             try {
                 if (dryRun) return console.log(`  [dry] createDatabase ${DATABASE_ID}`);
                 await databases.create({
@@ -135,7 +134,7 @@ async function tryCreateDatabase() {
                 console.log(`  ⚠️ database ${DATABASE_ID}: ${e2.message || e2}`);
             }
         } else {
-            console.log(`  ⚠️ database ${DATABASE_ID}: ${msg}`);
+            console.log(`  ⚠️ database ${DATABASE_ID}: ${e.message || e}`);
         }
     }
 }
@@ -168,11 +167,10 @@ async function tryEnsureBucket(id, name) {
         await storage.getBucket({ bucketId: id });
         console.log(`  · bucket ${id} (exists — ${name})`);
     } catch (e) {
-        const msg = String(e.message || e);
-        if (msg.includes('not found') || msg.includes('404')) {
+        if (e.code === 404) {
             await tryCreateBucket(id, name, 50 * 1024 * 1024, ['read("any")']);
         } else {
-            console.log(`  ⚠️ bucket ${id}: ${msg}`);
+            console.log(`  ⚠️ bucket ${id}: ${e.message || e}`);
         }
     }
 }
