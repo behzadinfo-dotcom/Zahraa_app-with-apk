@@ -1,169 +1,143 @@
-package ir.behzad.platform.core.appwrite
+package ir.behzad.platform.core.common
 
-import io.appwrite.ID
-import io.appwrite.models.Row
-import io.appwrite.services.TablesDB
-import ir.behzad.platform.core.common.AppError
-import ir.behzad.platform.core.common.AppResult
-import ir.behzad.platform.core.common.PrivacyPolicy
+/**
+ * شناسه‌ی جداول TablesDB (نه Collections قدیمی).
+ *
+ * این مقادیر «قرارداد» بین کلاینت و `backend/appwrite.json` هستند: اگر در کنسول Appwrite
+ * شناسه‌ی دیگری انتخاب کردید، باید هم اینجا و هم در appwrite.json همان مقدار بگذارید
+ * (شناسه‌های سفارشی مثل `profiles` مجازند؛ لازم نیست ID تصادفی کنسول باشد).
+ */
+object TableIds {
+    /** نام دیتابیس — از `appwrite.databaseId` در local.properties می‌آید و این مقدار پیش‌فرض است. */
+    const val DATABASE = "ZahraDB"
 
-/** یک سطر TablesDB به‌شکل ساده‌شده تا لایه‌ی UI به مدل‌های SDK وابسته نشود. */
-data class TableRow(val id: String, val data: Map<String, Any?>) {
-    fun string(key: String, default: String = ""): String = data[key] as? String ?: default
-    fun long(key: String, default: Long = 0L): Long = when (val v = data[key]) {
-        is Number -> v.toLong()
-        is String -> v.toLongOrNull() ?: default
-        else -> default
-    }
+    // --- هویت و پیوند ---
+    const val PROFILES = "profiles"
+    const val USER_SETTINGS = "user_settings"
+    const val FATHER_LINKS = "father_links"
+    const val PAIRING_CODES = "pairing_codes"
 
-    fun boolean(key: String, default: Boolean = false): Boolean = data[key] as? Boolean ?: default
+    // --- ارتباط ---
+    const val FATHER_MESSAGES = "father_messages"
+    /** آلبوم خاطرات مشترک (زهرا مالک؛ پدر با تأیید زهرا اضافه می‌کند). */
+    const val ALBUM_ITEMS = "album_items"
+    const val CALL_SESSIONS = "call_sessions"
+    const val CALL_SIGNALS = "call_signals"
+
+    // --- داده‌ی قابل‌اشتراک (با opt-in زهرا) ---
+    const val WEEKLY_SUMMARIES = "weekly_summaries"
+    const val ROUTINE_BLOCKS = "routine_blocks"
+    const val WATER_LOGS = "water_logs"
+    const val EXERCISE_LOGS = "exercise_logs"
+    const val BADGES = "badges"
+
+    // --- داده‌ی صرفاً خصوصی زهرا (هرگز Sync نمی‌شود) ---
+    const val CYCLE_ENTRIES = "cycle_entries"
+    const val MOOD_ENTRIES = "mood_entries"
+    const val JOURNAL_ENTRIES = "journal_entries"
+    const val SCREEN_TIME_LOGS = "screen_time_logs"
+    const val CHAT_HISTORY = "chat_history"
+
+    // --- محتوا (کاتالوگ خواندنی، نوشتن فقط با نقش مدیر) ---
+    const val LESSONS = "lessons"
+    const val QUIZZES = "quizzes"
+    const val RECIPES = "recipes"
+    const val EXERCISES = "exercises"
+    const val LEARNING_NODES = "learning_nodes"
+    const val ART_PROMPTS = "art_prompts"
+
+    // --- پرامپت ۰۱: حافظه‌ی پیشرفت پلیر ویدیو/صوت ---
+    const val LESSON_MEDIA_PROGRESS = "lesson_media_progress"
+
+    // --- پرامپت ۰۲: ماژول ورزش/یوگا/تنفس/یادگیری ---
+    const val WELLNESS_MOVES = "wellness_moves"
+    const val SKETCH_REFERENCES = "sketch_references"
+    const val WELLNESS_LOGS = "wellness_logs"
+
+    /**
+     * همه‌ی جداولی که واقعاً در Appwrite ساخته می‌شوند
+     * (مطابق `backend/appwrite.json` — ۲۳ جدول).
+     */
+    val serverTables: Set<String> = setOf(
+        PROFILES, USER_SETTINGS, FATHER_LINKS, PAIRING_CODES,
+        FATHER_MESSAGES, ALBUM_ITEMS, CALL_SESSIONS, CALL_SIGNALS,
+        WEEKLY_SUMMARIES, ROUTINE_BLOCKS, WATER_LOGS, EXERCISE_LOGS, BADGES,
+        LESSONS, QUIZZES, RECIPES, EXERCISES, LEARNING_NODES, ART_PROMPTS,
+        LESSON_MEDIA_PROGRESS, WELLNESS_MOVES, SKETCH_REFERENCES, WELLNESS_LOGS,
+    )
+
+    /** جدول‌های «فقط روی دستگاه» — در سرور هیچ سطری ندارند و ساخته هم نمی‌شوند. */
+    val deviceOnlyTables: Set<String> = setOf(
+        CYCLE_ENTRIES, MOOD_ENTRIES, JOURNAL_ENTRIES, SCREEN_TIME_LOGS, CHAT_HISTORY,
+    )
 }
 
-interface TablesDbService {
-    val isConfigured: Boolean
-
-    suspend fun create(
-        table: String,
-        data: Map<String, Any?>,
-        permissions: List<String> = emptyList(),
-        rowId: String = ID.unique(),
-    ): AppResult<TableRow>
-
-    suspend fun get(table: String, id: String): AppResult<TableRow>
-
-    suspend fun list(table: String, queries: List<String> = emptyList()): AppResult<List<TableRow>>
-
-    suspend fun update(table: String, id: String, data: Map<String, Any?>): AppResult<TableRow>
-
-    /** ساخت یا به‌روزرسانی — پایه‌ی SyncEngine (همان rowId محلی حفظ می‌شود). */
-    suspend fun upsert(
-        table: String,
-        id: String,
-        data: Map<String, Any?>,
-        permissions: List<String> = emptyList(),
-    ): AppResult<TableRow>
-
-    suspend fun delete(table: String, id: String): AppResult<Unit>
+/** سطل‌های Storage. دسترسی پدر فقط به سطل مشترک و فقط از راه پیوند فعال است. */
+object BucketIds {
+    const val HEART_MEDIA = "heart-to-heart-media"
+    const val AVATARS = "avatars"
+    const val FATHER_ALBUM = "father-album"
+    const val ZAHRA_PRIVATE = "zahra-private"
+    /**
+     * پرامپت ۰۲: تصاویر مرجع و فایل‌های صوتی راهنما برای حرکات و مرجع‌های سیاه‌قلم.
+     * Bucket اختصاصی: ID = 6aa1e998002f955507b0
+     */
+    const val WELLNESS_MEDIA = "Zahraa-bckt"
 }
 
-class AppwriteTablesDbService(
-    private val provider: AppwriteClientProvider,
-) : TablesDbService {
+/** شناسه‌ی توابع سرور (Function ID در کنسول Appwrite). */
+object FunctionIds {
+    const val USER_BOOTSTRAP = "user-bootstrap"
+    const val PAIRING = "pairing"
+    const val WEEKLY_SUMMARY = "weekly-summary"
+    /** لایه‌ی AI «همراه زهرا» — proxy سمت سرور؛ کلید مدل هرگز در اپ نیست. */
+    const val AI_COMPANION = "ai-companion"
 
-    override val isConfigured: Boolean get() = provider.isConfigured
+    /**
+     * هشدار «کمک می‌خوام» به پدر: متن و مقصد را سرور می‌سازد، پیوند فعال را بررسی
+     * می‌کند و شماره‌های اضطراری را حتی بدون پیوند برمی‌گرداند.
+     */
+    const val NOTIFY_GUARDIAN = "notify-guardian"
 
-    private val db get() = TablesDB(provider.client)
+    /** «درس امروز» با ترتیب و پیش‌نیازهای سمت سرور (ساعت دستگاه نقشی ندارد). */
+    const val LESSON_OF_THE_DAY = "lesson-of-the-day"
 
-    /** تبدیل مدل Row<T> SDK به [TableRow] — داده‌ی سطر دیگر دور ریخته نمی‌شود. */
-    private fun toTableRow(row: Row<*>): TableRow {
-        val raw = row.data
-        val map: Map<String, Any?> = if (raw is Map<*, *>) {
-            raw.entries.associate { entry -> entry.key.toString() to entry.value }
-        } else {
-            emptyMap()
-        }
-        return TableRow(row.id, map)
-    }
+    /** اثر انگشت کاتالوگ؛ اگر عوض نشده باشد دانلود کامل انجام نمی‌شود. */
+    const val CATALOG_DIGEST = "catalog-digest"
 
-    override suspend fun create(
-        table: String,
-        data: Map<String, Any?>,
-        permissions: List<String>,
-        rowId: String,
-    ): AppResult<TableRow> {
-        if (!provider.isConfigured) {
-            return AppResult.Err(AppError.Local("بک‌اند پیکربندی نشده؛ داده فقط روی همین دستگاه ذخیره شد."))
-        }
-        return runCatching {
-            val row = db.createRow(
-                databaseId = provider.databaseId,
-                tableId = table,
-                rowId = rowId,
-                data = data,
-                permissions = permissions,
-            )
-            AppResult.Ok(toTableRow(row))
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it, "ذخیره‌ی «$table» ناموفق بود.")) }
-    }
+    /** خلاصه‌ی روزانه‌ی opt-in برای پدر (فقط داده‌های قابل اشتراک). */
+    const val DAILY_CHECKIN = "daily-checkin"
 
-    override suspend fun get(table: String, id: String): AppResult<TableRow> {
-        if (!provider.isConfigured) return AppResult.Err(AppError.Local("بک‌اند پیکربندی نشده."))
-        return runCatching {
-            val row = db.getRow(
-                databaseId = provider.databaseId,
-                tableId = table,
-                rowId = id,
-            )
-            AppResult.Ok(toTableRow(row))
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it)) }
-    }
+    /** تأیید/رد خاطره‌ی پدر در آلبوم، با بررسی مالکیت سمت سرور. */
+    const val ALBUM_CONSENT = "album-consent"
 
-    override suspend fun list(table: String, queries: List<String>): AppResult<List<TableRow>> {
-        if (!provider.isConfigured) return AppResult.Ok(emptyList())
-        return runCatching {
-            val result = db.listRows(
-                databaseId = provider.databaseId,
-                tableId = table,
-                queries = queries,
-            )
-            AppResult.Ok(result.rows.map { toTableRow(it) })
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it)) }
-    }
+    /**
+     * پرامپت ۰۲: تولید تصویر مرجع سیاه‌قلم (pencil sketch) برای تمرین نقاشی.
+     * ورودی: subject + level (۴-۱۰). خروجی: URL تصویر سیاه‌وسفید.
+     */
+    const val GENERATE_SKETCH_REFERENCE = "generate-sketch-reference"
+}
 
-    override suspend fun update(table: String, id: String, data: Map<String, Any?>): AppResult<TableRow> {
-        if (!provider.isConfigured) return AppResult.Err(AppError.Local("بک‌اند پیکربندی نشده."))
-        return runCatching {
-            val row = db.updateRow(
-                databaseId = provider.databaseId,
-                tableId = table,
-                rowId = id,
-                data = data,
-            )
-            AppResult.Ok(toTableRow(row))
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it, "به‌روزرسانی «$table» ناموفق بود.")) }
-    }
+/**
+ * جداولی که به‌هیچ‌وجه از دستگاه زهرا بیرون نمی‌روند.
+ * این لیست هم در SyncEngine و هم در لایه‌ی دسترسی سرور (Permissions) باید رعایت شود.
+ */
+object PrivacyPolicy {
+    val neverSyncTables: Set<String> = setOf(
+        TableIds.CYCLE_ENTRIES,
+        TableIds.MOOD_ENTRIES,
+        TableIds.JOURNAL_ENTRIES,
+        TableIds.SCREEN_TIME_LOGS,
+        TableIds.CHAT_HISTORY,
+    )
 
-    override suspend fun upsert(
-        table: String,
-        id: String,
-        data: Map<String, Any?>,
-        permissions: List<String>,
-    ): AppResult<TableRow> {
-        if (PrivacyPolicy.isNeverSynced(table)) {
-            return AppResult.Err(AppError.Permission("این داده خصوصی است و هرگز به سرور فرستاده نمی‌شود."))
-        }
-        if (!provider.isConfigured) return AppResult.Err(AppError.Local("بک‌اند پیکربندی نشده."))
-        return runCatching {
-            // اول تلاش برای به‌روزرسانی؛ اگر سطر وجود نداشت، ساخت با همان rowId.
-            // (عمداً از upsertRow استفاده نمی‌کنیم تا فقط به امضاهای قطعی SDK تکیه کنیم.)
-            val updated = runCatching {
-                db.updateRow(
-                    databaseId = provider.databaseId,
-                    tableId = table,
-                    rowId = id,
-                    data = data,
-                )
-            }.getOrNull()
-            val row = updated ?: db.createRow(
-                databaseId = provider.databaseId,
-                tableId = table,
-                rowId = id,
-                data = data,
-                permissions = permissions,
-            )
-            AppResult.Ok(toTableRow(row))
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it, "همگام‌سازی «$table» ناموفق بود.")) }
-    }
+    /** داده‌هایی که در خلاصه‌ی هفتگی (فقط با opt-in) به پدر نشان داده می‌شود. */
+    val weeklyShareableTables: Set<String> = setOf(
+        TableIds.ROUTINE_BLOCKS,
+        TableIds.WATER_LOGS,
+        TableIds.EXERCISE_LOGS,
+        TableIds.BADGES,
+    )
 
-    override suspend fun delete(table: String, id: String): AppResult<Unit> {
-        if (!provider.isConfigured) return AppResult.Ok(Unit)
-        return runCatching {
-            db.deleteRow(
-                databaseId = provider.databaseId,
-                tableId = table,
-                rowId = id,
-            )
-            AppResult.Ok(Unit)
-        }.getOrElse { AppResult.Err(AppwriteErrors.map(it)) }
-    }
+    fun isNeverSynced(table: String): Boolean = table in neverSyncTables
 }
