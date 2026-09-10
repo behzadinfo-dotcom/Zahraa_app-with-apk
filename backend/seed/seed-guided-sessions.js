@@ -30,19 +30,15 @@ const IMG_BASE = `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/`;
 const IMG_VIEW = '/view?project=' + PROJECT_ID;
 const img = (fileId) => `${IMG_BASE}${fileId}${IMG_VIEW}`;
 
-// timingMap استاندارد ۴ بخشی — ۹۰۰ ثانیه = ۱۵ دقیقه
-// استراتژی «۴ فایل = دقیقاً ۱۵:۰۰»: مدت هر فایل صوتی دقیقاً برابر targetSec است
-// (گفتار TTS تا سقف + کشش ۰.۹۵x + پد سکوت — اسکریپت: pad-guided-audio.sh).
-// مکث بین بخش‌ها داخل همان فایل (انتهای p1 تا p3) تعبیه شده است؛ فایل‌ها پشت‌سرهم
-// بدون درز، کل جلسه‌ی ۱۵ دقیقه‌ای را می‌سازند و نوار ۴ سگمنتی پلیر مو‌به‌موی فایل‌هاست.
-const TIMING = JSON.stringify({
-    totalSec: 900,
-    fileStrategy: 'pad-guided-audio.sh — 4 files back-to-back = 900s exactly',
+// راهبرد صوت v2 (تک‌فایل): هر جلسه «یک فایل کامل» است که با
+// build-full-session.py ساخته می‌شود (کشش 0.95x + loudnorm + پد سکوت توزیع‌شده + فید).
+// مدت mind/hyp = ۹۰۰ث؛ calm = مدت متغیر برنامه‌ی موقعیتی v2 (ستون «مدت» سند نهایی).
+// آپلود: guided-audio/<category>/<slug>/p1.mp3 → fileId: g-a-<category>-<slug>-p1.mp3
+const fullTiming = (totalSec, rate = 0.95) => JSON.stringify({
+    totalSec,
+    fileStrategy: 'build-full-session.py — 1 file (p1.mp3) = totalSec exactly',
     parts: [
-        { order: 1, key: 'start', titleFa: 'آغاز و امن‌سازی', targetSec: 270, file: 'p1.mp3', speechRate: 0.95, silenceTailSec: 'متغیر — مکث آغاز' },
-        { order: 2, key: 'deep', titleFa: 'عمیق‌شدن و تصویرسازی', targetSec: 240, file: 'p2.mp3', speechRate: 0.95, silenceTailSec: 'متغیر — مکث گذار' },
-        { order: 3, key: 'core', titleFa: 'تمرکز و تلقین', targetSec: 240, file: 'p3.mp3', speechRate: 0.95, silenceTailSec: 'متغیر — مکث تثبیت' },
-        { order: 4, key: 'end', titleFa: 'بازگشت و تقویت', targetSec: 150, file: 'p4.mp3', speechRate: 0.95, silenceTailSec: 0 },
+        { order: 1, key: 'full', titleFa: 'جلسه‌ی کامل', targetSec: totalSec, file: 'p1.mp3', speechRate: rate, silenceTailSec: 0 },
     ],
     addressFa: 'زهرا جان',
 });
@@ -81,18 +77,22 @@ const mindfulness = [
     ['mind-30-kind-breath', 'نفس مهربان', 'هر نفس، یک لبخند کوچک', '["شفقت"]'],
 ];
 
-// ---------- ۱۰ آرامش بین درس‌ها (رفع خستگی ذهنی، چشم بسته) ----------
+// ---------- ۱۴ آرامش بین درس‌ها (برنامه‌ی موقعیتی v2 — اسلاگ/مدت/SR از سند نهایی) ----------
 const calm = [
-    ['calm-01-golden-reset', 'ریست طلایی بین دو درس', '۵ دقیقه‌ی طلایی که ذهن را تازه می‌کند', '["بین درس","ریست"]'],
-    ['calm-02-478-guided', 'نفس ۴-۷-۸ هدایت‌شده', 'همراه می‌شمارم برایت؛ تو فقط نفس بکش', '["نفس","آرامش"]'],
-    ['calm-03-shoulders-neck', 'شانه و گردن رها', 'خستگی نشستن را از شانه‌ها بگیر', '["بدن"]'],
-    ['calm-04-rested-eyes', 'چشم‌های خسته', 'استراحت عمیق برای چشم و ذهن', '["چشم","استراحت"]'],
-    ['calm-05-rainy-forest', 'جنگل بارانی', 'صدای باران در جنگل، بازسازی توجه', '["تصویرسازی"]'],
-    ['calm-06-waves-beach', 'ساحل و موج', 'هر موج، یک فکر خسته را می‌برد', '["تصویرسازی"]'],
-    ['calm-07-mountain-breeze', 'نسیم کوهستان', 'هوای تازه‌ی بلندی‌ها در ذهن', '["انرژی"]'],
-    ['calm-08-three-breath-stop', 'توقف سه‌نفسه', 'تکنیک STOP برای وسط روز', '["تکنیک"]'],
-    ['calm-09-glow-breath', 'نفس درخشان', 'انرژی‌گیری دوباره با تنفس', '["انرژی"]'],
-    ['calm-10-next-lesson-bridge', 'پل به درس بعدی', 'ذهن را آماده‌ی درس بعد کن', '["بین درس"]'],
+    ['calm-14-calm-start', 'میز آرام', '۳ دقیقه تا اولین پارت روز؛ ذهن آرام شروع می‌کند', '["شروع","ریت روز"]', 180, 0.80],
+    ['calm-01-golden-reset', 'ریست طلایی', '۵ دقیقه‌ی طلایی که ذهن را تازه می‌کند', '["بین درس","ریست"]', 360, 0.65],
+    ['calm-03-shoulder-neck', 'رهایی شانه و گردن', 'خستگی نشستن را از شانه‌ها بگیر', '["بدن"]', 300, 0.60],
+    ['calm-04-eye-rest', 'استراحت چشم‌ها', 'استراحت عمیق برای چشم و ذهن', '["چشم","استراحت"]', 300, 0.60],
+    ['calm-11-school-unwind', 'تخلیه‌ی روز مدرسه', '۴ دقیقه تا خانه واقعاً خانه شود', '["خانه","تخلیه"]', 240, 0.60],
+    ['calm-06-sea-waves', 'ساحل و امواج دریا', 'هر موج، یک فکر خسته را می‌برد', '["تصویرسازی"]', 360, 0.75],
+    ['calm-05-rainy-forest', 'سفر به جنگل بارانی', 'صدای باران در جنگل، بازسازی توجه', '["تصویرسازی"]', 360, 0.75],
+    ['calm-09-golden-breath', 'تنفس درخشان طلایی', 'انرژی‌گیری دوباره با تنفس', '["انرژی","نفس"]', 240, 0.55],
+    ['calm-07-mountain-breeze', 'نسیم خنک کوهستان', 'هوای تازه‌ی بلندی‌ها در ذهن', '["انرژی"]', 270, 0.75],
+    ['calm-10-next-lesson-bridge', 'پل انتقال به درس بعدی', 'ذهن را آماده‌ی درس بعد کن', '["بین درس"]', 210, 0.80],
+    ['calm-12-after-exam', 'رهایی بعد از آزمون', 'برگه سپرده شد؛ حالا رهایی', '["آزمون","رهایی"]', 210, 0.55],
+    ['calm-02-breath-478', 'تنفس ۴-۷-۸', 'همراه می‌شمارم برایت؛ تو فقط نفس بکش', '["نفس","آرامش"]', 360, 0.45],
+    ['calm-08-stop-3breath', 'توقف سه‌نفسه (STOP)', 'تکنیک STOP برای وسط روز', '["تکنیک"]', 180, 0.50],
+    ['calm-13-close-desk', 'بستن میز', 'امروز را مثل حرفه‌ای‌ها در قفسه‌اش بگذار', '["پایان روز"]', 210, 0.80],
 ];
 
 // ---------- ۱۵ خودهیپنوتیزم (مناسب ۱۴ سال، تلقین‌های مثبت اثبات‌شده) ----------
@@ -115,26 +115,30 @@ const hypnosis = [
 ];
 
 
+const catOf = { mind: 'mindfulness', calm: 'calm', hyp: 'hypnosis' };
+
 function toRows() {
     const rows = [];
-    const push = (arr, prefix) => arr.forEach(([slug, title, subtitle, tags], i) => {
+    const push = (arr, prefix, defDur) => arr.forEach(([slug, title, subtitle, tags, durSec, rate], i) => {
+        const totalSec = durSec || defDur;
         rows.push({
             slug,
             category: catOf[prefix],
             titleFa: title,
             subtitleFa: subtitle,
             eyesClosed: true,
-            totalSec: 900,
-            audioCueId: `g-${slug.split('-').slice(0, 2).join('')}:start|deep|core|end`,
+            totalSec,
+            audioCueId: `g-${slug.split('-').slice(0, 2).join('')}:full`,
             referenceImageUrl: img(`g-${slug}`),
-            timingMap: TIMING,
+            timingMap: fullTiming(totalSec, rate || 0.95),
             addressFa: 'زهرا جان',
             orderIndex: i + 1,
             tags,
         });
     });
-    push(mindfulness, 'mind');
-    push(calm, 'calm');
+    push(mindfulness, 'mind', 900);
+    push(calm, 'calm', 900);
+    push(hypnosis, 'hyp', 900);
     return rows;
 }
 
@@ -179,8 +183,8 @@ async function upsertRow(row) {
 async function main() {
     const rows = toRows();
     const count = (c) => rows.filter((r) => r.category === c).length;
-    if (rows.length !== 45) {
-        console.error('❌ تعداد باید دقیقاً ۴۵ باشد (۳۰+۱۰+۵).');
+    if (rows.length !== 59) {
+        console.error('❌ تعداد باید دقیقاً ۵۹ باشد (۳۰ ذهن‌آگاهی + ۱۴ آرامش + ۱۵ هیپنوتیزم).');
         process.exit(1);
     }
 
