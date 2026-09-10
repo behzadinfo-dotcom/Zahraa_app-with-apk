@@ -38,7 +38,7 @@ function createColumnFn(type) {
         'enum': 'createEnumColumn',
     };
     return map[type] || null;
-}
+} 
 
 async function tryCreateTable(tableId, name, perms, rowSecurity) {
     try {
