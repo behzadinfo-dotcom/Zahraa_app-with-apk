@@ -29,7 +29,7 @@ const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
 const BUCKET_ID = '6aa1eaae00303400117b'; // Bucket اختصاصی پرامپت ۰۲
-const SOURCE_DIR = path.resolve(__dirname, '../../artifacts/prompt-02-push');
+const SOURCE_DIR = path.resolve(__dirname, '../artifacts/prompt-02-push');
 
 if (!PROJECT_ID || !API_KEY) {
     console.error('❌ APPWRITE_PROJECT_ID و APPWRITE_API_KEY لازم است.');
