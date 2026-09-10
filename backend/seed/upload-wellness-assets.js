@@ -1,25 +1,12 @@
 /**
  * آپلود assets پرامپت ۰۲ (تصاویر + صوت) به باکت wellness-media در Appwrite.
+ * Bucket ID (Appwrite): 6aa1eaae00303400117b
+ * Bucket name (API): wellness-media
  *
  * ورودی: artifacts/prompt-02-push/wellness-references/ + wellness-audio/
- * ساختار فایل‌ها در باکت: {category}/{filename} (مثل yoga/01-balasana.jpg)
  *
  * اجرا:  node backend/seed/upload-wellness-assets.js
  * خشک:  node backend/seed/upload-wellness-assets.js --dry-run
- *
- * نکته: اگر فایل از قبل در باکت باشد، skip می‌شود (بر اساس filename یکتا).
- *
- * === محدودیت‌های Appwrite برای fileId ===
- * - حداکثر ۳۶ کاراکتر
- * - فقط کاراکترهای a-z, A-Z, 0-9, و _
- * - نمی‌تواند با _ شروع شود
- *
- * === استراتژی fileId ===
- * - فقط نام فایل (نه مسیر) استفاده می‌شود
- * - پسوند فایل حذف می‌شود (jpg/png/mp3)
- * - کاراکترهای غیرمجاز (مثل -, .) به _ تبدیل می‌شوند
- * - اگر طول > 36 شد، hash کوتاه (crc32) به انتها اضافه می‌شود
- * - اگر تکراری بود (مثلاً تصویر و صوت با یک نام)، پیشوند `img_` یا `aud_` اضافه می‌شود
  */
 const sdk = require('node-appwrite');
 const fs = require('fs');
@@ -28,8 +15,8 @@ const path = require('path');
 const ENDPOINT = process.env.APPWRITE_ENDPOINT || 'https://fra.cloud.appwrite.io/v1';
 const PROJECT_ID = process.env.APPWRITE_PROJECT_ID;
 const API_KEY = process.env.APPWRITE_API_KEY;
-const BUCKET_ID = '6aa1eaae00303400117b'; // Bucket اختصاصی پرامپت ۰۲
-const SOURCE_DIR = path.resolve(__dirname, '../artifacts/prompt-02-push');
+const BUCKET_ID = 'wellness-media'; // نام bucket (Appwrite API از نام استفاده می‌کند، نه ID)
+const SOURCE_DIR = path.resolve(__dirname, '../../artifacts/prompt-02-push');
 
 if (!PROJECT_ID || !API_KEY) {
     console.error('❌ APPWRITE_PROJECT_ID و APPWRITE_API_KEY لازم است.');
