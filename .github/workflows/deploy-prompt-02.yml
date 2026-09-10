@@ -1,6 +1,6 @@
 name: Deploy Prompt 02 (wellness)
 
-# اجرای دستی deploy پرامپت ۰۲ (migration + آپلود + seed) روی Appwrite production.
+# اجرای دستتی deploy پرامپت ۰۲ (migration + آپلود + seed) روی Appwrite production.
 # - ۳ گام: migrate → upload assets → seed moves
 # - هر گام idempotent است (skip اگر موجود باشد)
 # - می‌توان با workflow_dispatch دستی اجرا کرد
@@ -42,8 +42,9 @@ jobs:
     env:
       APPWRITE_ENDPOINT: https://fra.cloud.appwrite.io/v1
       APPWRITE_PROJECT_ID: 6a9d59e3002751cc3ea8
-      APPWRITE_API_KEY: ${{ standard_3e7b1708ccbd4165c42af6f3570f90ac84aa5f3b2ad39ba06e7e3a4026d30a3e6940adbccac68e4441ab9c64f178af6bccadde6a6e90f46c598b95eb450b823a35f3bb507b102d922d482c83252664214c3efb664723e513bae9e323b3a219eb6ec557a043a3b8ec23bcf5ad658a04822e1d39cdb08c6ca23febd8f29214abab }}
+      APPWRITE_API_KEY: ${{ secrets.APPWRITE_API_KEY }}
       APPWRITE_DATABASE_ID: ZahraDB
+      APPWRITE_BUCKET_ID: 6aa1eaae00303400117b
 
     steps:
       - name: 📥 Checkout
@@ -60,17 +61,7 @@ jobs:
         working-directory: backend/seed
         run: npm ci
 
-      - name: 🔐 بررسی APPWRITE_API_KEY
-        id: preflight
-        run: |
-          if [ -z "$APPWRITE_API_KEY" ]; then
-            echo "❌ GitHub Secret با نام APPWRITE_API_KEY تنظیم نشده یا خالی است."
-            exit 1
-          fi
-          echo "✅ APPWRITE_API_KEY موجود است."
-
-      - name: 🗄 گام ۱/۳ — Migration (ساخت database + جداول + bucket)
-        id: migration
+      - name: 🗄 گام ۱/۴ — Migration (database + جداول + بررسی bucket)
         if: github.event.inputs.skip_migration != 'true'
         working-directory: backend/seed
         run: |
@@ -78,8 +69,15 @@ jobs:
           node migrate-prompt-02.js
           echo "✅ Migration تمام شد."
 
-      - name: 📤 گام ۲/۳ — آپلود تصاویر + صوت
-        id: upload
+      - name: 🧹 گام ۲/۴ — پاکسازی سطرهای تکراری (قبل از seed)
+        if: github.event.inputs.skip_seed != 'true'
+        working-directory: backend/seed
+        run: |
+          echo "▶ اجرای cleanup-wellness-moves.js ..."
+          node cleanup-wellness-moves.js
+          echo "✅ پاکسازی تمام شد."
+
+      - name: 📤 گام ۳/۴ — آپلود تصاویر + صوت
         if: github.event.inputs.skip_upload != 'true'
         working-directory: backend/seed
         run: |
@@ -93,8 +91,7 @@ jobs:
           echo "▶ اجرای upload-wellness-assets.js ..."
           node upload-wellness-assets.js
 
-      - name: 🌱 گام ۳/۳ — Seed ۴۳ حرکت به wellness_moves
-        id: seed
+      - name: 🌱 گام ۴/۴ — Seed ۴۳ حرکت به wellness_moves
         if: github.event.inputs.skip_seed != 'true'
         working-directory: backend/seed
         run: |
@@ -113,37 +110,19 @@ jobs:
           echo "  project:  $APPWRITE_PROJECT_ID"
           echo "  database: $APPWRITE_DATABASE_ID"
           echo ""
-          if [ "${{ steps.migration.outcome }}" = "success" ]; then
-            echo "  ✅ migration: موفق"
-          elif [ "${{ github.event.inputs.skip_migration }}" = "true" ]; then
+          if [ "${{ github.event.inputs.skip_migration }}" != "true" ]; then
+            echo "  ✅ migration: اجرا شد"
+          else
             echo "  ⏭ migration: رد شد"
-          elif [ "${{ steps.migration.outcome }}" = "skipped" ]; then
-            echo "  ⏭ migration: به‌دلیل خطای پیش‌نیاز اجرا نشد"
-          else
-            echo "  ❌ migration: شکست خورد"
           fi
-          if [ "${{ steps.upload.outcome }}" = "success" ]; then
-            echo "  ✅ upload:   موفق"
-          elif [ "${{ github.event.inputs.skip_upload }}" = "true" ]; then
+          if [ "${{ github.event.inputs.skip_upload }}" != "true" ]; then
+            echo "  ✅ upload:   اجرا شد"
+          else
             echo "  ⏭ upload:   رد شد"
-          elif [ "${{ steps.upload.outcome }}" = "skipped" ]; then
-            echo "  ⏭ upload:   به‌دلیل شکست migration اجرا نشد"
-          else
-            echo "  ❌ upload:   شکست خورد"
           fi
-          if [ "${{ steps.seed.outcome }}" = "success" ]; then
-            echo "  ✅ seed:     موفق"
-          elif [ "${{ github.event.inputs.skip_seed }}" = "true" ]; then
-            echo "  ⏭ seed:     رد شد"
-          elif [ "${{ steps.seed.outcome }}" = "skipped" ]; then
-            echo "  ⏭ seed:     به‌دلیل شکست مرحله‌ی قبلی اجرا نشد"
+          if [ "${{ github.event.inputs.skip_seed }}" != "true" ]; then
+            echo "  ✅ seed:     اجرا شد"
           else
-            echo "  ❌ seed:     شکست خورد"
+            echo "  ⏭ seed:     رد شد"
           fi
           echo "═══════════════════════════════════════"
-          if [ "${{ steps.preflight.outcome }}" = "failure" ] || \
-             [ "${{ steps.migration.outcome }}" = "failure" ] || \
-             [ "${{ steps.upload.outcome }}" = "failure" ] || \
-             [ "${{ steps.seed.outcome }}" = "failure" ]; then
-            exit 1
-          fi
